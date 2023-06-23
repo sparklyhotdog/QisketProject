@@ -83,5 +83,5 @@ def animate(i):
     return line,
 
 
-anim = animation.FuncAnimation(fig, animate, init_func=init, frames=num_frames, interval=2, blit=True)
+anim = animation.FuncAnimation(fig, animate, init_func=init, frames=num_frames, interval=1, blit=True)
 plt.show()
