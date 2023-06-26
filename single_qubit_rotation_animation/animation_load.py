@@ -1,8 +1,7 @@
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import numpy as np
 from qiskit import *
 from math import pi, sqrt
+import pickle
 
 state_H = [1, 0]
 state_V = [0, 1]
@@ -18,35 +17,20 @@ state_a = state_H
 state_b = state_L
 
 # n = how many rotation steps
-n = 20
+n = 200
 
 # num_shots = how many times to run each circuit
-num_shots = 512
+num_shots = 1024
 
 # num_frames = how many frames in the animation
 num_frames = 50
 
-
-fig = plt.figure()
-axis = plt.axes(xlim=(0, 4*pi), ylim=(0 - 40, num_shots + 40))
-plt.xlabel("Angle")
-plt.ylabel("Counts")
-plt.ylim(0 - 40, num_shots + 40)
-plt.xticks([0, pi, 2*pi, 3*pi, 4*pi], ['0', 'π', '2π', '3π', '4π'])
-line, = axis.plot([], [], lw=1)
-
-
-def init():
-    line.set_data([], [])
-    return line,
-
-
+x_val, y_val = [], []
 dy = (state_b[1]-state_a[1])/num_frames
 dx = (state_b[0]-state_a[0])/num_frames
 
-
-def animate(i):
-    x_val, y_val = [], []
+for i in range(num_frames):
+    temp_x_val, temp_y_val = [], []
     # add dx and dy
     current_state = [state_a[0] + i*dx, state_a[1] + i*dy]
 
@@ -78,14 +62,14 @@ def animate(i):
         else:
             out0 = 0
 
-        x_val.append(delta)
-        y_val.append(out0)
+        temp_x_val.append(delta)
+        temp_y_val.append(out0)
+    x_val.append(temp_x_val)
+    y_val.append(temp_y_val)
 
-    # update the data for the graph
-    line.set_data(x_val, y_val)
+with open("x_val", "wb") as x:
+    pickle.dump(x_val, x)
+with open("y_val", "wb") as y:
+    pickle.dump(y_val, y)
 
-    return line,
 
-
-anim = animation.FuncAnimation(fig, animate, init_func=init, frames=num_frames, interval=1, blit=True)
-plt.show()
