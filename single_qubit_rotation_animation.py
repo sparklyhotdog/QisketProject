@@ -47,6 +47,7 @@ dx = (state_b[0]-state_a[0])/num_frames
 
 def animate(i):
     x_val, y_val = [], []
+    # add dx and dy
     current_state = [state_a[0] + i*dx, state_a[1] + i*dy]
 
     # normalize so that it is a quantum state vector
@@ -55,21 +56,23 @@ def animate(i):
     qc = QuantumCircuit(1, 1)
 
     for j in range(n+1):
+        # build the circuit with the new start state
         qc.clear()
         qc = QuantumCircuit(1, 1)
         qc.initialize(new_state, 0)
 
-        # rotate the qubit (equivalent to rotating the polarizer)
+        # rotate
         delta = 4 * j * pi / n
         qc.ry(delta, 0)
         qc.measure(0, 0)
 
-        # simulate
+        # simulate with the aer simulator
         backend = Aer.get_backend('qasm_simulator')
         job = backend.run(transpile(qc, backend), shots=num_shots)
         result = job.result()
         counts = result.get_counts(qc)
 
+        # put in a zero for the count if needed
         if '0' in counts:
             out0 = counts['0']
         else:
@@ -78,6 +81,7 @@ def animate(i):
         x_val.append(delta)
         y_val.append(out0)
 
+    # update the data for the graph
     line.set_data(x_val, y_val)
 
     return line,
