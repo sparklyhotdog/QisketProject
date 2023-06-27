@@ -5,36 +5,43 @@ import math
 from scipy import stats
 import statsmodels.api as sm
 
-# lambd = average count rate
-lambd = 1
+# lambd = average count rate (counts/second, typically on the order of 10^4/s)
+lambd = 100000
 
 # n = the number of events recorded
-n = 2000
+n = 1000000
+
+#time interval to integrate counts, say 1ms (1e9ps)
+interval = 1e9
 
 # interval width for the poisson distribution
-interval_width = 10
+# interval_width = 10
 
+#timestamps in multiples of 1ps, just as the real time taggers are specified
 timestamps = []
 
+#generating pseudo timestamps following an exp distribution
 t = 0
 for i in range(n):
-    t += random.expovariate(lambd)
+    t += math.floor(random.expovariate(lambd) * 1e12)
     timestamps.append(t)
 
-# calculate the number of events occuring in a fixed interval of time
-# the poisson distribution is an appropriate model for counts
-num_intervals = math.floor(timestamps[n - 1]/interval_width)
-counts = np.zeros(num_intervals + 1)
-curr_interval = 0
 
-for i in range(n - 1):
-    # if the time is larger than the upper bound of the current time interval, move on to the next interval
-    if timestamps[i] > (curr_interval + 1)*interval_width:
-        curr_interval += 1
-    # add to the counts
-    counts[curr_interval] += 1
+t_start = timestamps[0]
+t_stop = timestamps[-1]
 
-plt.hist(counts)
+# Now we want to count how many time tags are there within each 1ms interval
+# this count number is recorded by the counts[] array
+# the size of counts[] is pre-specified to avoid trouble
+counts = np.zeros(math.floor(t_stop / interval) + 1)
+
+# loop through the timestamps to put them into the correct time intervals
+for i in range(n):
+    index = math.floor((timestamps[i] - t_start) / interval)
+    counts[index] +=1
+
+
+plt.hist(counts, bins=20)
 plt.xlabel('Number of occurences in the interval')
 plt.ylabel('Frequency')
 plt.show()
