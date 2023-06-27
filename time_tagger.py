@@ -5,44 +5,41 @@ import math
 from scipy import stats
 import statsmodels.api as sm
 
-# lambd = average count rate
-lambd = 1
+# lambd = average count rate (100k counts/second)
+lambd = 100000
 
-# n = the number of events recorded
-n = 2000
+# n = the number of events recorded (1 mil)
+n = 1000000
 
-# interval width for the poisson distribution
-interval_width = 10
+# time interval to integrate counts (1ms = 1e9ps)
+interval_width = 1e9
 
+# (picoseconds)
 timestamps = []
 
+# generating pseudo timestamps following an exponential distribution
 t = 0
 for i in range(n):
-    t += random.expovariate(lambd)
+    t += math.floor(random.expovariate(lambd) * 1e12)
     timestamps.append(t)
 
-# calculate the number of events occuring in a fixed interval of time
-# the poisson distribution is an appropriate model for counts
-num_intervals = math.floor(timestamps[n - 1]/interval_width)
-counts = np.zeros(num_intervals + 1)
-curr_interval = 0
+# count how many time tags are there within each 1ms interval
+counts = np.zeros(math.floor(timestamps[-1]/interval_width) + 1)
 
-for i in range(n - 1):
-    # if the time is larger than the upper bound of the current time interval, move on to the next interval
+# loop through timestamps and put them in the correct time intervals
+curr_interval = 0
+for i in range(n):
     if timestamps[i] > (curr_interval + 1)*interval_width:
         curr_interval += 1
-    # add to the counts
     counts[curr_interval] += 1
 
-plt.hist(counts)
+plt.hist(counts, bins=20)
 plt.xlabel('Number of occurences in the interval')
 plt.ylabel('Frequency')
 plt.show()
 
-test_array = np.array(counts)
-test_mu = np.mean(test_array)
-qdist = stats.poisson(test_mu)
+qdist = stats.poisson(np.mean(counts))
 
-sm.qqplot(test_array, dist=qdist, line='45')
+sm.qqplot(counts, dist=qdist, line='45')
 plt.title('Poisson Probability Plot')
 plt.show()
