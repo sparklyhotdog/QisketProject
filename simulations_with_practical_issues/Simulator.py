@@ -94,9 +94,8 @@ class Simulator:
         self.dtime = s_time - i_time
 
         self.bins = np.arange(-dt_range / 2, dt_range / 2 + self.coincidence_interval / 2, self.coincidence_interval)
-        [histo, edges] = np.histogram(self.dtime, self.bins)
 
-        return max(histo)
+        return max(np.histogram(self.dtime, self.bins)[0])
 
     def plot_cross_corr(self):
         plt.hist(self.dtime, self.bins)

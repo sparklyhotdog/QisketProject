@@ -1,4 +1,4 @@
-from Simulator import Simulator
+from simulations_with_practical_issues.Simulator import Simulator
 import math
 import numpy as np
 from qiskit import *
@@ -64,16 +64,23 @@ def entangled_protocol():
                     x_val.append(delta)
 
     fig, ax = plt.subplots()
+    visibility = []
 
     for i in range(4):
         ax.plot(x_val, y_val[i], label=states[i])
+
+        # calculate visibility
+        i_max = max(y_val[i])
+        i_min = min(y_val[i])
+        visibility.append((i_max - i_min)/(i_max + i_min))
+        print(states[i]+': '+str(visibility[i]))
 
     ax.set_xlabel("Angle")
     ax.set_ylabel("Counts")
     ax.set_ylim(0 - 40, n + 40)
     ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
     plt.legend()
-    plt.savefig('plot.png', dpi=1000)
+    plt.savefig('polarization_correlation.png', dpi=1000)
     plt.show()
 
 
