@@ -57,7 +57,7 @@ def entangled_protocol():
                               deadtime,
                               jitter_fwhm,
                               coincidence_interval)
-                bar(1)
+                bar()
                 y_val[i].append(a.simulate())
 
                 if i == 0:

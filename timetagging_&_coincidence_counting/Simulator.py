@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import math
 import random
+import numpy as np
 
 
 class Simulator:
@@ -26,8 +27,8 @@ class Simulator:
         self.deadtime = deadtime
         self.jitter_fwhm = jitter_fwhm
         self.coincidence_interval = coincidence_interval
-        self.cross_corr_plot_x = range(-50000, 50000, coincidence_interval)
-        self.cross_corr_plot_y = []
+        self.dtime = []
+        self.bins = []
 
     def simulate(self):
         n = self.total_time * self.lambd                  # total number of events
@@ -79,31 +80,26 @@ class Simulator:
                 index += 1
 
         # count coincidences
-        if len(timestamps_signal) > len(timestamps_idler):
-            list2 = timestamps_signal
-            list1 = timestamps_idler
-        else:
-            list1 = timestamps_signal
-            list2 = timestamps_idler
+        dt_range = 100000      # in picoseconds
 
-        for delta_t in self.cross_corr_plot_x:
-            coincidences = []
-            # index in list2 of the left bound
-            left_bound = 0
-            for x in list1:
-                # check interval (x + delta_t - coincidence_interval, x + delta_t + coincidence_interval)
-                while list2[left_bound] < (x + delta_t) - self.coincidence_interval and left_bound < len(list2) - 1:
-                    left_bound += 1
-                # now x + delta_t - coincidence_interval <= larger[left_bound]
-                if list2[left_bound] < (x + delta_t) + self.coincidence_interval:
-                    # x + delta_t and larger[left_bound] are in the same window
-                    # the timestamp of the coincidence is the time of the later event
-                    coincidences.append(max(x + delta_t, list2[left_bound]))
-            self.cross_corr_plot_y.append(len(coincidences))
-        return max(self.cross_corr_plot_y)
+        s_floor = np.int64(np.floor(np.array(timestamps_signal) / (dt_range / 2)))
+        i_floor = np.int64(np.floor(np.array(timestamps_idler) / (dt_range / 2)))
+        coinc0 = np.intersect1d(s_floor, i_floor, return_indices=True)
+        coinc1 = np.intersect1d(s_floor, i_floor - 1, return_indices=True)
+        coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
+        coinc = np.hstack((coinc0, coinc1, coinc2))
+
+        s_time = np.array(timestamps_signal)[coinc[1]]
+        i_time = np.array(timestamps_idler)[coinc[2]]
+        self.dtime = s_time - i_time
+
+        self.bins = np.arange(-dt_range / 2, dt_range / 2 + self.coincidence_interval / 2, self.coincidence_interval)
+        [histo, edges] = np.histogram(self.dtime, self.bins)
+
+        return max(histo)
 
     def plot_cross_corr(self):
-        plt.plot(self.cross_corr_plot_x, self.cross_corr_plot_y)
+        plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
         plt.savefig('cross_correlation_plot.png', dpi=1000)
