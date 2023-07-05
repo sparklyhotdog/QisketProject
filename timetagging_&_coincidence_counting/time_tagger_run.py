@@ -1,9 +1,9 @@
 import math
 import random
 
-lambd = 100000                  # average count rate (100k counts/second)
+lambd = 100000                  # average count rate (counts/second)
 n = 1000000                     # total number of events (1 mil)
-t_difference = 100              # difference between idler and signal
+lag = 100                       # difference between idler and signal (ps)
 optical_loss_signal = 0.1       # probability of not being detected for the signal photons
 optical_loss_idler = 0.1        # probability of not being detected for the idler photons
 dark_count_rate = 10000         # (counts/second)
@@ -23,7 +23,7 @@ for i in range(n):
     if random.random() > optical_loss_signal:
         timestamps_signal.append(t)
     if random.random() > optical_loss_idler:
-        timestamps_idler.append(t + t_difference)
+        timestamps_idler.append(t + lag)
 
 # jitter
 sigma = jitter_fwhm/(2*math.sqrt(2*math.log(2)))

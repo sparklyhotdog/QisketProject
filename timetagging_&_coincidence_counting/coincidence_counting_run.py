@@ -43,6 +43,9 @@ with alive_bar(len(x_val), force_tty=True) as bar:
         # print(len(coincidences))
         bar(1)
         y_val.append(len(coincidences))
+
+print(max(y_val))
+
 plt.plot(x_val, y_val)
 plt.xlabel('Time difference (ps)')
 plt.ylabel('Counts')
