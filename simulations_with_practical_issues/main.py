@@ -9,9 +9,8 @@ import yaml
 
 
 class EntanglementSim:
-    states = ['H', 'D', 'V', 'A']
 
-    def __init__(self, yaml_fn, rotations):
+    def __init__(self, yaml_fn, entangled_state, rotations):
         self.yaml_fn = yaml_fn
         y_fn = open(self.yaml_fn, 'r')
         self.dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
@@ -19,6 +18,7 @@ class EntanglementSim:
 
         self.lambd = self.dicty['lambd']
         self.total_time = self.dicty['total_time']
+        self.n = self.lambd * self.total_time
         self.lag = self.dicty['lag']
         self.optical_loss_signal = self.dicty['optical_loss_signal']
         self.optical_loss_idler = self.dicty['optical_loss_idler']
@@ -26,11 +26,13 @@ class EntanglementSim:
         self.deadtime = self.dicty['deadtime']
         self.jitter_fwhm = self.dicty['jitter_fwhm']
         self.coincidence_interval = self.dicty['coincidence_interval']
+        self.entangled_state = entangled_state
         self.rotations = rotations
         self.x_val = []
         self.y_val = [[], [], [], []]
 
     def run(self):
+        states = ['H', 'D', 'V', 'A']
 
         qc = QuantumCircuit(2, 2)
         with alive_bar(4 * self.rotations, force_tty=True) as bar:
@@ -42,10 +44,7 @@ class EntanglementSim:
                     qc.clear()
                     qc = QuantumCircuit(2, 2)
 
-                    # delta = phase difference
-                    delta = .25
-                    entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
-                    qc.initialize(entangled_state, [0, 1])
+                    qc.initialize(self.entangled_state, [0, 1])
 
                     # keep  A the same, and rotate B
                     qc.ry(i * math.pi / 2, 0)
@@ -53,9 +52,9 @@ class EntanglementSim:
                     qc.ry(delta, 1)
                     pr_00 = abs(Statevector(qc)[0]) ** 2
 
-                    a = Simulator(pr_00, 'config.yaml')
+                    sim = Simulator(pr_00, 'config.yaml')
                     bar()
-                    self.y_val[i].append(a.simulate())
+                    self.y_val[i].append(sim.simulate())
 
                     if i == 0:
                         self.x_val.append(delta)
@@ -71,6 +70,7 @@ class EntanglementSim:
         return visibility
 
     def plot_correlation(self):
+        states = ['H', 'D', 'V', 'A']
 
         fig, ax = plt.subplots()
 
@@ -79,7 +79,7 @@ class EntanglementSim:
 
         ax.set_xlabel("Angle")
         ax.set_ylabel("Counts")
-        ax.set_ylim(0 - 40, n + 40)
+        ax.set_ylim(0 - 40, self.n + 40)
         ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
         plt.legend()
         plt.savefig('plots\polarization_correlation.png', dpi=1000)
@@ -94,8 +94,13 @@ def plot_visibility_darkcounts():
 
     x_val = range(0, 100000, 50000)
     y_val = [[], [], [], []]
+
+    # delta = phase difference
+    delta = .25
+    entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
+
     for dc in x_val:
-        sim = EntanglementSim('config.yaml', 200)
+        sim = EntanglementSim('config.yaml', entangled_state, 200)
         sim.set_dc_rate(dc)
         visibility = sim.run()
         for i in range(4):
@@ -111,6 +116,8 @@ def plot_visibility_darkcounts():
 
 
 if __name__ == '__main__':
-    a = EntanglementSim('config.yaml', 200)
-    print(a.run())
+    d = .25
+    state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
+    a = EntanglementSim('config.yaml', state, 200)
+    a.run()
     a.plot_correlation()
