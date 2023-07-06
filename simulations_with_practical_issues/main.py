@@ -82,7 +82,7 @@ class EntanglementSim:
         ax.set_ylim(0 - 40, self.n + 40)
         ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
         plt.legend()
-        plt.savefig('plots\polarization_correlation.png', dpi=1000)
+        plt.savefig('plots\\polarization_correlation.png', dpi=1000)
         plt.show()
 
     def set_dc_rate(self, dc):
@@ -92,7 +92,7 @@ class EntanglementSim:
 def plot_visibility_darkcounts():
     states = ['H', 'D', 'V', 'A']
 
-    x_val = range(0, 100000, 50000)
+    x_val = range(0, 100000, 20000)
     y_val = [[], [], [], []]
 
     # delta = phase difference
@@ -111,13 +111,36 @@ def plot_visibility_darkcounts():
     plt.legend()
     plt.xlabel('Dark Count Rate (counts/second)')
     plt.ylabel('Visibility')
-    plt.savefig('plots\visibility_vs_darkcounts', dpi=1000)
+    plt.savefig('plots\\visibility_vs_darkcounts', dpi=1000)
+    plt.show()
+
+
+def plot_visibility_phasediff():
+    states = ['H', 'D', 'V', 'A']
+
+    x_val = [0, 0.5, 1, 1.5]
+    y_val = [[], [], [], []]
+
+    for delta in x_val:
+        entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
+        sim = EntanglementSim('config.yaml', entangled_state, 200)
+        visibility = sim.run()
+        for i in range(4):
+            y_val[i].append(visibility[i])
+
+    for i in range(4):
+        plt.plot(x_val, y_val[i], label=states[i])
+    plt.legend()
+    plt.xlabel('Phase Difference in the Entangled State')
+    plt.ylabel('Visibility')
+    plt.savefig('plots\\visibility_vs_phasediff', dpi=1000)
     plt.show()
 
 
 if __name__ == '__main__':
-    d = .25
-    state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
-    a = EntanglementSim('config.yaml', state, 200)
-    a.run()
-    a.plot_correlation()
+    # d = .25
+    # state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
+    # a = EntanglementSim('config.yaml', state, 200)
+    # a.run()
+    # a.plot_correlation()
+    plot_visibility_phasediff()

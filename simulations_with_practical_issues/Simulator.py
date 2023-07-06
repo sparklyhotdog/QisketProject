@@ -97,7 +97,7 @@ class Simulator:
         plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
-        plt.savefig('plots\cross_correlation_plot.png', dpi=1000)
+        plt.savefig('plots\\cross_correlation_plot.png', dpi=1000)
         plt.show()
 
 
