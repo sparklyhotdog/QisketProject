@@ -5,83 +5,112 @@ from qiskit import *
 from qiskit.quantum_info import Statevector
 from alive_progress import alive_bar
 import matplotlib.pyplot as plt
+import yaml
 
 
-def entangled_protocol():
-    lambd = 100000  # average count rate (counts/second)
-    total_time = 1
-    n = total_time * lambd  # total number of events
-    lag = 100  # difference between idler and signal (ps)
-    optical_loss_signal = 0.1  # probability of not being detected for the signal photons
-    optical_loss_idler = 0.1  # probability of not being detected for the idler photons
-    dark_count_rate = 10000  # (counts/second)
-    deadtime = 1000000  # (picoseconds)
-    jitter_fwhm = 100  # (picoseconds)
-    coincidence_interval = 10000  # (picoseconds)
-
-    # rotations = how many rotation steps
-    rotations = 200
-
-    x_val = []
-    y_val = [[], [], [], []]
+class EntanglementSim:
     states = ['H', 'D', 'V', 'A']
 
-    qc = QuantumCircuit(2, 2)
-    with alive_bar(4 * rotations, force_tty=True) as bar:
+    def __init__(self, yaml_fn, rotations):
+        self.yaml_fn = yaml_fn
+        y_fn = open(self.yaml_fn, 'r')
+        self.dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
+        y_fn.close()
 
-        for i in range(4):
+        self.lambd = self.dicty['lambd']
+        self.total_time = self.dicty['total_time']
+        self.lag = self.dicty['lag']
+        self.optical_loss_signal = self.dicty['optical_loss_signal']
+        self.optical_loss_idler = self.dicty['optical_loss_idler']
+        self.dark_count_rate = self.dicty['dark_count_rate']
+        self.deadtime = self.dicty['deadtime']
+        self.jitter_fwhm = self.dicty['jitter_fwhm']
+        self.coincidence_interval = self.dicty['coincidence_interval']
+        self.rotations = rotations
+        self.x_val = []
+        self.y_val = [[], [], [], []]
 
-            for j in range(rotations):
-                # build the circuit
-                qc.clear()
-                qc = QuantumCircuit(2, 2)
+    def run(self):
 
-                # delta = phase difference
-                delta = .25
-                entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
-                qc.initialize(entangled_state, [0, 1])
+        qc = QuantumCircuit(2, 2)
+        with alive_bar(4 * self.rotations, force_tty=True) as bar:
 
-                # keep  A the same, and rotate B
-                qc.ry(i * math.pi / 2, 0)
-                delta = 4 * j * math.pi / rotations
-                qc.ry(delta, 1)
-                pr_00 = abs(Statevector(qc)[0]) ** 2
+            for i in range(4):
 
-                a = Simulator(pr_00,
-                              lambd,
-                              total_time,
-                              lag,
-                              optical_loss_signal,
-                              optical_loss_idler,
-                              dark_count_rate,
-                              deadtime,
-                              jitter_fwhm,
-                              coincidence_interval)
-                bar()
-                y_val[i].append(a.simulate())
+                for j in range(self.rotations):
+                    # build the circuit
+                    qc.clear()
+                    qc = QuantumCircuit(2, 2)
 
-                if i == 0:
-                    x_val.append(delta)
+                    # delta = phase difference
+                    delta = .25
+                    entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
+                    qc.initialize(entangled_state, [0, 1])
 
-    fig, ax = plt.subplots()
-    visibility = []
+                    # keep  A the same, and rotate B
+                    qc.ry(i * math.pi / 2, 0)
+                    delta = 4 * j * math.pi / self.rotations
+                    qc.ry(delta, 1)
+                    pr_00 = abs(Statevector(qc)[0]) ** 2
 
-    for i in range(4):
-        ax.plot(x_val, y_val[i], label=states[i])
+                    a = Simulator(pr_00, 'config.yaml')
+                    bar()
+                    self.y_val[i].append(a.simulate())
+
+                    if i == 0:
+                        self.x_val.append(delta)
 
         # calculate visibility
-        i_max = max(y_val[i])
-        i_min = min(y_val[i])
-        visibility.append((i_max - i_min)/(i_max + i_min))
-        print(states[i]+': '+str(visibility[i]))
+        visibility = []
+        for i in range(4):
+            i_max = max(self.y_val[i])
+            i_min = min(self.y_val[i])
+            visibility.append((i_max - i_min) / (i_max + i_min))
+            print(states[i] + ': ' + str(visibility[i]))
 
-    ax.set_xlabel("Angle")
-    ax.set_ylabel("Counts")
-    ax.set_ylim(0 - 40, n + 40)
-    ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
+        return visibility
+
+    def plot_correlation(self):
+
+        fig, ax = plt.subplots()
+
+        for i in range(4):
+            ax.plot(self.x_val, self.y_val[i], label=states[i])
+
+        ax.set_xlabel("Angle")
+        ax.set_ylabel("Counts")
+        ax.set_ylim(0 - 40, n + 40)
+        ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
+        plt.legend()
+        plt.savefig('plots\polarization_correlation.png', dpi=1000)
+        plt.show()
+
+    def set_dc_rate(self, dc):
+        self.dark_count_rate = dc
+
+
+def plot_visibility_darkcounts():
+    states = ['H', 'D', 'V', 'A']
+
+    x_val = range(0, 100000, 50000)
+    y_val = [[], [], [], []]
+    for dc in x_val:
+        sim = EntanglementSim('config.yaml', 200)
+        sim.set_dc_rate(dc)
+        visibility = sim.run()
+        for i in range(4):
+            y_val[i].append(visibility[i])
+
+    for i in range(4):
+        plt.plot(x_val, y_val[i], label=states[i])
     plt.legend()
-    plt.savefig('polarization_correlation.png', dpi=1000)
+    plt.xlabel('Dark Count Rate (counts/second)')
+    plt.ylabel('Visibility')
+    plt.savefig('plots\visibility_vs_darkcounts', dpi=1000)
     plt.show()
 
 
-entangled_protocol()
+if __name__ == '__main__':
+    a = EntanglementSim('config.yaml', 200)
+    print(a.run())
+    a.plot_correlation()

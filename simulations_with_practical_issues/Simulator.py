@@ -2,31 +2,27 @@ import matplotlib.pyplot as plt
 import math
 import random
 import numpy as np
+import yaml
 
 
 class Simulator:
 
-    def __init__(self,
-                 pr,
-                 lambd,                     # average count rate (counts/second)
-                 total_time,                # (seconds)
-                 lag,                       # difference between idler and signal (picoseconds)
-                 optical_loss_signal,       # probability of not being detected for the signal photons
-                 optical_loss_idler,        # probability of not being detected for the idler photons
-                 dark_count_rate,           # (counts/second)
-                 deadtime,                  # (picoseconds)
-                 jitter_fwhm,               # (picoseconds)
-                 coincidence_interval):     # (picoseconds)
+    def __init__(self, pr, yaml_fn):
+        self.yaml_fn = yaml_fn
+        y_fn = open(self.yaml_fn, 'r')
+        self.dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
+        y_fn.close()
+
         self.pr = pr
-        self.lambd = lambd
-        self.total_time = total_time
-        self.lag = lag
-        self.optical_loss_signal = optical_loss_signal
-        self.optical_loss_idler = optical_loss_idler
-        self.dark_count_rate = dark_count_rate
-        self.deadtime = deadtime
-        self.jitter_fwhm = jitter_fwhm
-        self.coincidence_interval = coincidence_interval
+        self.lambd = self.dicty['lambd']
+        self.total_time = self.dicty['total_time']
+        self.lag = self.dicty['lag']
+        self.optical_loss_signal = self.dicty['optical_loss_signal']
+        self.optical_loss_idler = self.dicty['optical_loss_idler']
+        self.dark_count_rate = self.dicty['dark_count_rate']
+        self.deadtime = self.dicty['deadtime']
+        self.jitter_fwhm = self.dicty['jitter_fwhm']
+        self.coincidence_interval = self.dicty['coincidence_interval']
         self.dtime = []
         self.bins = []
 
@@ -101,11 +97,11 @@ class Simulator:
         plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
-        plt.savefig('cross_correlation_plot.png', dpi=1000)
+        plt.savefig('plots\cross_correlation_plot.png', dpi=1000)
         plt.show()
 
 
 if __name__ == "__main__":
-    a = Simulator(1, 100000, 10, 100, .1, .1, 1000, 1000000, 100, 1000)
+    a = Simulator(1, 'config.yaml')
     print(a.simulate())
     a.plot_cross_corr()
