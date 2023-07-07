@@ -7,8 +7,10 @@ from alive_progress import alive_bar
 import matplotlib.pyplot as plt
 import yaml
 
+states = ['H', 'D', 'V', 'A']
 
-class EntanglementSim:
+
+class Rotation:
 
     def __init__(self, yaml_fn, entangled_state, rotations):
         self.yaml_fn = yaml_fn
@@ -30,9 +32,9 @@ class EntanglementSim:
         self.rotations = rotations
         self.x_val = []
         self.y_val = [[], [], [], []]
+        self.state = ''
 
     def run(self):
-        states = ['H', 'D', 'V', 'A']
 
         qc = QuantumCircuit(2, 2)
         with alive_bar(4 * self.rotations, force_tty=True) as bar:
@@ -51,35 +53,39 @@ class EntanglementSim:
                     delta = 4 * j * math.pi / self.rotations
                     qc.ry(delta, 1)
                     pr_00 = abs(Statevector(qc)[0]) ** 2
+                    if i + j == 0:
+                        self.state = Statevector(qc).draw(output='latex_source')
 
                     sim = Simulator(pr_00, 'config.yaml')
                     bar()
-                    self.y_val[i].append(sim.simulate())
+                    self.y_val[i].append(sim.run())
 
                     if i == 0:
                         self.x_val.append(delta)
 
-        # calculate visibility
+    def get_visibility(self):
+
         visibility = []
         for i in range(4):
             i_max = max(self.y_val[i])
             i_min = min(self.y_val[i])
             visibility.append((i_max - i_min) / (i_max + i_min))
-            print(states[i] + ': ' + str(visibility[i]))
+            # print(states[i] + ': ' + str(visibility[i]))
 
         return visibility
 
     def plot_correlation(self):
-        states = ['H', 'D', 'V', 'A']
 
         fig, ax = plt.subplots()
 
         for i in range(4):
             ax.plot(self.x_val, self.y_val[i], label=states[i])
 
-        ax.set_xlabel("Angle")
+        ax.set_xlabel("Polarizer Angle for the 2nd Photon")
         ax.set_ylabel("Counts")
         ax.set_ylim(0 - 40, self.n + 40)
+        title = '$' + self.state + '$'
+        ax.set_title(title)
         ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
         plt.legend()
         plt.savefig('plots\\polarization_correlation.png', dpi=1000)
@@ -88,59 +94,23 @@ class EntanglementSim:
     def set_dc_rate(self, dc):
         self.dark_count_rate = dc
 
+    def set_loss_signal(self, loss):
+        self.optical_loss_signal = loss
 
-def plot_visibility_darkcounts():
-    states = ['H', 'D', 'V', 'A']
+    def set_loss_idler(self, loss):
+        self.optical_loss_idler = loss
 
-    x_val = range(0, 100000, 20000)
-    y_val = [[], [], [], []]
+    def set_jitter(self, jitter):
+        self.jitter_fwhm = jitter
 
-    # delta = phase difference
-    delta = .25
-    entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
-
-    for dc in x_val:
-        sim = EntanglementSim('config.yaml', entangled_state, 200)
-        sim.set_dc_rate(dc)
-        visibility = sim.run()
-        for i in range(4):
-            y_val[i].append(visibility[i])
-
-    for i in range(4):
-        plt.plot(x_val, y_val[i], label=states[i])
-    plt.legend()
-    plt.xlabel('Dark Count Rate (counts/second)')
-    plt.ylabel('Visibility')
-    plt.savefig('plots\\visibility_vs_darkcounts', dpi=1000)
-    plt.show()
-
-
-def plot_visibility_phasediff():
-    states = ['H', 'D', 'V', 'A']
-
-    x_val = [0, 0.5, 1, 1.5]
-    y_val = [[], [], [], []]
-
-    for delta in x_val:
-        entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
-        sim = EntanglementSim('config.yaml', entangled_state, 200)
-        visibility = sim.run()
-        for i in range(4):
-            y_val[i].append(visibility[i])
-
-    for i in range(4):
-        plt.plot(x_val, y_val[i], label=states[i])
-    plt.legend()
-    plt.xlabel('Phase Difference in the Entangled State')
-    plt.ylabel('Visibility')
-    plt.savefig('plots\\visibility_vs_phasediff', dpi=1000)
-    plt.show()
+    def set_deadtime(self, deadtime):
+        self.deadtime = deadtime
 
 
 if __name__ == '__main__':
-    # d = .25
-    # state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
-    # a = EntanglementSim('config.yaml', state, 200)
-    # a.run()
-    # a.plot_correlation()
-    plot_visibility_phasediff()
+    d = .25
+    state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
+    a = Rotation('config.yaml', state, 200)
+    a.run()
+    print(a.get_visibility())
+    a.plot_correlation()
