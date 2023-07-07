@@ -85,7 +85,9 @@ class Simulator:
         coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
         self.coinc = np.hstack((coinc0, coinc1, coinc2))
 
+    def get_coincidences(self):
         return self.coinc.shape[1]
+
 
     def plot_cross_corr(self):
         x_val = range(-100000, 100000, self.coincidence_interval)
@@ -115,7 +117,7 @@ class Simulator:
         plt.plot(x_val, y_val)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
-        plt.savefig('plots\\cross_correlation_plot.png', dpi=1000)
+        plt.savefig('plots\\cross_correlation_plot.png', dpi=1000, bbox_inches='tight')
         plt.show()
 
 

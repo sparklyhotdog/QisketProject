@@ -57,11 +57,13 @@ class Rotation:
                         self.state = Statevector(qc).draw(output='latex_source')
 
                     sim = Simulator(pr_00, 'config.yaml')
-                    bar()
-                    self.y_val[i].append(sim.run())
+                    sim.run()
+                    self.y_val[i].append(sim.get_coincidences())
 
                     if i == 0:
                         self.x_val.append(delta)
+
+                    bar()
 
     def get_visibility(self):
 
@@ -88,7 +90,7 @@ class Rotation:
         ax.set_title(title)
         ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
         plt.legend()
-        plt.savefig('plots\\polarization_correlation.png', dpi=1000)
+        plt.savefig('plots\\polarization_correlation.png', dpi=1000, bbox_inches='tight')
         plt.show()
 
     def set_dc_rate(self, dc):

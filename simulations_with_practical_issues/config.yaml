@@ -1,6 +1,6 @@
 lambd: 100000                   # average count rate (counts/second)
 total_time: 1                   # (seconds)
-lag: 100                        # difference between idler and signal (picoseconds)
+lag: 10000                      # difference between idler and signal (picoseconds)
 optical_loss_signal: 0.1        # probability of not being detected for the signal photons
 optical_loss_idler: 0.1         # probability of not being detected for the idler photons
 dark_count_rate: 1000           # (counts/second)
