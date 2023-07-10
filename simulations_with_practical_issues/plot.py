@@ -1,7 +1,9 @@
-from simulations_with_practical_issues.Rotation import Rotation
+from Rotation import Rotation
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from alive_progress import alive_bar
+
 
 rotations = 50
 states = ['H', 'D', 'V', 'A']
@@ -16,13 +18,15 @@ def plot_visibility_darkcounts(start, stop, num_points):
     delta = .25
     entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
 
-    for dc in x_val:
-        sim = Rotation('config.yaml', entangled_state, rotations)
-        sim.set_dc_rate(dc)
-        sim.run()
-        visibility = sim.get_visibility()
-        for i in range(4):
-            y_val[i].append(visibility[i])
+    with alive_bar(len(x_val), force_tty=True) as bar:
+        for dc in x_val:
+            sim = Rotation('config.yaml', entangled_state, rotations)
+            sim.set_dc_rate(dc)
+            sim.run(progress_bar=False)
+            visibility = sim.get_visibility()
+            for i in range(4):
+                y_val[i].append(visibility[i])
+            bar()
 
     for i in range(4):
         plt.plot(x_val, y_val[i], label=states[i])
@@ -38,13 +42,15 @@ def plot_visibility_phasediff(start, stop, num_points):
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
-    for delta in x_val:
-        entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
-        sim = Rotation('config.yaml', entangled_state, rotations)
-        sim.run()
-        visibility = sim.get_visibility()
-        for i in range(4):
-            y_val[i].append(visibility[i])
+    with alive_bar(len(x_val), force_tty=True) as bar:
+        for delta in x_val:
+            entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
+            sim = Rotation('config.yaml', entangled_state, rotations)
+            sim.run(progress_bar=False)
+            visibility = sim.get_visibility()
+            for i in range(4):
+                y_val[i].append(visibility[i])
+            bar()
 
     for i in range(4):
         plt.plot(x_val, y_val[i], label=states[i])
@@ -64,14 +70,16 @@ def plot_visibility_loss(start, stop, num_points):
     delta = .25
     entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
 
-    for loss in x_val:
-        sim = Rotation('config.yaml', entangled_state, rotations)
-        sim.set_loss_signal(loss)
-        sim.set_loss_idler(loss)
-        sim.run()
-        visibility = sim.get_visibility()
-        for i in range(4):
-            y_val[i].append(visibility[i])
+    with alive_bar(len(x_val), force_tty=True) as bar:
+        for loss in x_val:
+            sim = Rotation('config.yaml', entangled_state, rotations)
+            sim.set_loss_signal(loss)
+            sim.set_loss_idler(loss)
+            sim.run(progress_bar=False)
+            visibility = sim.get_visibility()
+            for i in range(4):
+                y_val[i].append(visibility[i])
+            bar()
 
     for i in range(4):
         plt.plot(x_val, y_val[i], label=states[i])
@@ -91,13 +99,15 @@ def plot_visibility_jitter(start, stop, num_points):
     delta = .25
     entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
 
-    for jitter in x_val:
-        sim = Rotation('config.yaml', entangled_state, rotations)
-        sim.set_jitter(jitter)
-        sim.run()
-        visibility = sim.get_visibility()
-        for i in range(4):
-            y_val[i].append(visibility[i])
+    with alive_bar(len(x_val), force_tty=True) as bar:
+        for jitter in x_val:
+            sim = Rotation('config.yaml', entangled_state, rotations)
+            sim.set_jitter(jitter)
+            sim.run(progress_bar=False)
+            visibility = sim.get_visibility()
+            for i in range(4):
+                y_val[i].append(visibility[i])
+            bar()
 
     for i in range(4):
         plt.plot(x_val, y_val[i], label=states[i])
@@ -116,13 +126,15 @@ def plot_visibility_deadtime(start, stop, num_points):
     delta = .25
     entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
 
-    for deadtime in x_val:
-        sim = Rotation('config.yaml', entangled_state, rotations)
-        sim.set_deadtime(deadtime)
-        sim.run()
-        visibility = sim.get_visibility()
-        for i in range(4):
-            y_val[i].append(visibility[i])
+    with alive_bar(len(x_val), force_tty=True) as bar:
+        for deadtime in x_val:
+            sim = Rotation('config.yaml', entangled_state, rotations)
+            sim.set_deadtime(deadtime)
+            sim.run(progress_bar=False)
+            visibility = sim.get_visibility()
+            for i in range(4):
+                y_val[i].append(visibility[i])
+            bar()
 
     for i in range(4):
         plt.plot(x_val, y_val[i], label=states[i])
@@ -134,8 +146,8 @@ def plot_visibility_deadtime(start, stop, num_points):
 
 
 if __name__ == '__main__':
-    # plot_visibility_darkcounts(0, 100000, 4)
-    plot_visibility_phasediff(start=0, stop=2*math.pi, num_points=32)
+    # plot_visibility_darkcounts(0, 1000000, 4)
+    # plot_visibility_phasediff(start=0, stop=2*math.pi, num_points=64)
     # plot_visibility_loss(0, 1, 4)
-    # plot_visibility_jitter(0, 1000, 4)
-    # plot_visibility_deadtime(0, 1000000, 4)
+    # plot_visibility_jitter(0, 100000, 64)
+    plot_visibility_deadtime(0, 1000000, 4)

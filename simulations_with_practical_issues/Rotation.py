@@ -1,4 +1,4 @@
-from simulations_with_practical_issues.Simulator import Simulator
+from Simulator import Simulator
 import math
 import numpy as np
 from qiskit import *
@@ -7,7 +7,7 @@ from alive_progress import alive_bar
 import matplotlib.pyplot as plt
 import yaml
 
-states = ['H', 'D', 'V', 'A']
+states = ('H', 'D', 'V', 'A')
 
 
 class Rotation:
@@ -34,36 +34,40 @@ class Rotation:
         self.y_val = [[], [], [], []]
         self.state = ''
 
-    def run(self):
-
+    def run(self, progress_bar=True):
         qc = QuantumCircuit(2, 2)
-        with alive_bar(4 * self.rotations, force_tty=True) as bar:
+        if progress_bar:
+            bar = alive_bar(4 * self.rotations, force_tty=True)
 
-            for i in range(4):
+        for i in range(4):
 
-                for j in range(self.rotations):
-                    # build the circuit
-                    qc.clear()
-                    qc = QuantumCircuit(2, 2)
+            for j in range(self.rotations):
+                # build the circuit
+                qc.clear()
+                qc = QuantumCircuit(2, 2)
 
-                    qc.initialize(self.entangled_state, [0, 1])
+                qc.initialize(self.entangled_state, [0, 1])
 
-                    # keep  A the same, and rotate B
-                    qc.ry(i * math.pi / 2, 0)
-                    delta = 4 * j * math.pi / self.rotations
-                    qc.ry(delta, 1)
-                    pr_00 = abs(Statevector(qc)[0]) ** 2
-                    if i + j == 0:
-                        self.state = Statevector(qc).draw(output='latex_source')
+                # keep  A the same, and rotate B
+                qc.ry(i * math.pi / 2, 0)
+                delta = 4 * j * math.pi / self.rotations
+                qc.ry(delta, 1)
+                pr_00 = abs(Statevector(qc)[0]) ** 2
+                if i + j == 0:
+                    self.state = Statevector(qc).draw(output='latex_source')
 
-                    sim = Simulator(pr_00, 'config.yaml')
-                    sim.run()
-                    self.y_val[i].append(sim.get_coincidences())
+                sim = Simulator(pr_00, 'config.yaml')
+                sim.run()
+                self.y_val[i].append(sim.get_coincidences())
 
-                    if i == 0:
-                        self.x_val.append(delta)
+                if i == 0:
+                    self.x_val.append(delta)
 
+                if progress_bar:
                     bar()
+
+        if progress_bar:
+            bar.close()
 
     def get_visibility(self):
 
@@ -113,6 +117,6 @@ if __name__ == '__main__':
     d = .25
     state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
     a = Rotation('config.yaml', state, 200)
-    a.run()
+    a.run(progress_bar=False)
     print(a.get_visibility())
     a.plot_correlation()
