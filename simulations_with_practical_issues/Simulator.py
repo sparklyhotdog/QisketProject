@@ -111,9 +111,9 @@ class Simulator:
         return self.max_counts
 
     def get_car(self):
-        print(self.histo)
         i = int(np.nonzero(self.histo == self.max_counts)[0])
-        accidentals = np.delete(self.histo, [i - 1, i, i + 1])
+        x = 10
+        accidentals = np.delete(self.histo, range(i - x, i + x))
         return self.max_counts/np.mean(accidentals)
 
     def plot_cross_corr(self):
@@ -122,6 +122,21 @@ class Simulator:
         plt.ylabel('Counts')
         plt.savefig('plots\\cross_correlation_plot.png', dpi=1000, bbox_inches='tight')
         plt.show()
+
+    def set_dc_rate(self, dc):
+        self.dark_count_rate = dc
+
+    def set_loss_signal(self, loss):
+        self.optical_loss_signal = loss
+
+    def set_loss_idler(self, loss):
+        self.optical_loss_idler = loss
+
+    def set_jitter(self, jitter):
+        self.jitter_fwhm = jitter
+
+    def set_deadtime(self, deadtime):
+        self.deadtime = deadtime
 
 
 if __name__ == "__main__":
