@@ -22,7 +22,7 @@ def plot_visibility_darkcounts(start, stop, num_points):
         for dc in x_val:
             sim = Rotation('config.yaml', entangled_state, rotations)
             sim.set_dc_rate(dc)
-            sim.run(progress_bar=False)
+            sim.run()
             visibility = sim.get_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
@@ -46,7 +46,7 @@ def plot_visibility_phasediff(start, stop, num_points):
         for delta in x_val:
             entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
             sim = Rotation('config.yaml', entangled_state, rotations)
-            sim.run(progress_bar=False)
+            sim.run()
             visibility = sim.get_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
@@ -75,7 +75,7 @@ def plot_visibility_loss(start, stop, num_points):
             sim = Rotation('config.yaml', entangled_state, rotations)
             sim.set_loss_signal(loss)
             sim.set_loss_idler(loss)
-            sim.run(progress_bar=False)
+            sim.run()
             visibility = sim.get_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
@@ -103,7 +103,7 @@ def plot_visibility_jitter(start, stop, num_points):
         for jitter in x_val:
             sim = Rotation('config.yaml', entangled_state, rotations)
             sim.set_jitter(jitter)
-            sim.run(progress_bar=False)
+            sim.run()
             visibility = sim.get_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
@@ -130,7 +130,7 @@ def plot_visibility_deadtime(start, stop, num_points):
         for deadtime in x_val:
             sim = Rotation('config.yaml', entangled_state, rotations)
             sim.set_deadtime(deadtime)
-            sim.run(progress_bar=False)
+            sim.run()
             visibility = sim.get_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])

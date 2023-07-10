@@ -33,11 +33,10 @@ class Rotation:
         self.x_val = []
         self.y_val = [[], [], [], []]
         self.state = ''
+        self.title = ''
 
-    def run(self, progress_bar=True):
+    def run(self):
         qc = QuantumCircuit(2, 2)
-        if progress_bar:
-            bar = alive_bar(4 * self.rotations, force_tty=True)
 
         for i in range(4):
 
@@ -55,6 +54,7 @@ class Rotation:
                 pr_00 = abs(Statevector(qc)[0]) ** 2
                 if i + j == 0:
                     self.state = Statevector(qc).draw(output='latex_source')
+                    self.title = '$' + self.state + '$'
 
                 sim = Simulator(pr_00, 'config.yaml')
                 sim.run()
@@ -62,12 +62,6 @@ class Rotation:
 
                 if i == 0:
                     self.x_val.append(delta)
-
-                if progress_bar:
-                    bar()
-
-        if progress_bar:
-            bar.close()
 
     def get_visibility(self):
 
@@ -90,8 +84,7 @@ class Rotation:
         ax.set_xlabel("Polarizer Angle for the 2nd Photon")
         ax.set_ylabel("Counts")
         ax.set_ylim(0 - 40, self.n + 40)
-        title = '$' + self.state + '$'
-        ax.set_title(title)
+        ax.set_title(self.title)
         ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
         plt.legend()
         plt.savefig('plots\\polarization_correlation.png', dpi=1000, bbox_inches='tight')
@@ -112,11 +105,18 @@ class Rotation:
     def set_deadtime(self, deadtime):
         self.deadtime = deadtime
 
+    def set_plt_title(self, title):
+        self.title = title
+
 
 if __name__ == '__main__':
     d = .25
     state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
-    a = Rotation('config.yaml', state, 200)
-    a.run(progress_bar=False)
+    # default title expands the complex number into floats
+    # we set the title to keep it in its exponential form
+    titl = '$\\frac{\sqrt{2}}{2} |00\\rangle+e^{i\cdot' + str(d) + '}|11\\rangle$'
+    a = Rotation('config.yaml', state, rotations=50)
+    a.run()
+    a.set_plt_title(titl)
     print(a.get_visibility())
     a.plot_correlation()

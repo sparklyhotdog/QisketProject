@@ -3,7 +3,7 @@ from alive_progress import alive_bar
 import numpy as np
 
 n = 1000000                     # total number of events (1 mil)
-coincidence_interval = 10000    # (picoseconds)
+coincidence_interval = 1000    # (picoseconds)
 
 timestamps_signal = []          # (picoseconds)
 timestamps_idler = []           # (picoseconds)
@@ -17,11 +17,11 @@ with open('timestamps_idler') as i:
     for line in i:
         timestamps_idler.append(int(line))
 
-range_ns = 100
-width_ns = 1
+range_ps = 200000
 
-Sfloor = np.int64(np.floor(np.array(timestamps_signal) / (range_ns * 1000 / 2)))
-Ifloor = np.int64(np.floor(np.array(timestamps_idler) / (range_ns * 1000 / 2)))
+
+Sfloor = np.int64(np.floor(np.array(timestamps_signal) / (range_ps / 2)))
+Ifloor = np.int64(np.floor(np.array(timestamps_idler) / (range_ps / 2)))
 coinc0 = np.intersect1d(Sfloor, Ifloor, return_indices=True)
 coinc1 = np.intersect1d(Sfloor, Ifloor - 1, return_indices=True)
 coinc2 = np.intersect1d(Sfloor, Ifloor + 1, return_indices=True)
@@ -31,16 +31,26 @@ Stime = np.array(timestamps_signal)[coinc[1]]
 Itime = np.array(timestamps_idler)[coinc[2]]
 dtime = Stime - Itime
 
-bins = np.arange(-range_ns / 2, range_ns / 2 + width_ns / 2, width_ns) * 1000
+# iterate over coincidence_interval, find max of the max(histo)'s
+max_counts = 0
 
-[histo, edges] = np.histogram(dtime, bins)
-plt.hist(dtime, bins)
+for dt in np.arange(0, coincidence_interval, coincidence_interval/10):
+    # bins in picoseconds
+    bins = np.arange(-range_ps / 2 + dt, range_ps / 2 + coincidence_interval, coincidence_interval)
+    [histo, edges] = np.histogram(dtime, bins)
+    curr_count = max(histo)
+    if curr_count > max_counts:
+        max_counts = curr_count
+        max_dtime = dtime
+        max_bins = bins
+    else:
+        break
+print(max_counts)
+plt.hist(max_dtime, max_bins)
 plt.xlabel('Time difference (ps)')
 plt.ylabel('Counts')
 plt.savefig('cross_correlation_plot.png', dpi=1000)
 plt.show()
-print(max(histo))
-print(histo)
 
 #
 # # count coincidences

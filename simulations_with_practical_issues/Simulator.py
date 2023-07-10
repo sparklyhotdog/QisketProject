@@ -25,7 +25,11 @@ class Simulator:
         self.coincidence_interval = self.dicty['coincidence_interval']
         self.timestamps_signal = []
         self.timestamps_idler = []
-        self.coinc = np.array
+        self.max_counts = 0
+        # for the cross correlation plot
+        self.histo = np.array
+        self.dtime = np.array
+        self.bins = np.array
 
     def run(self):
         n = self.total_time * self.lambd                  # total number of events
@@ -73,48 +77,47 @@ class Simulator:
             else:
                 index += 1
 
+        # ___________________________________________________________________
         # count coincidences
 
-        # make sure that | lag | < 2 * dt_range
-        dt_range = 200000      # in picoseconds
+        range_ps = 200000
 
-        s_floor = np.int64(np.floor(np.array(self.timestamps_signal) / (dt_range / 2)))
-        i_floor = np.int64(np.floor(np.array(self.timestamps_idler) / (dt_range / 2)))
+        s_floor = np.int64(np.floor(np.array(self.timestamps_signal) / (range_ps / 2)))
+        i_floor = np.int64(np.floor(np.array(self.timestamps_idler) / (range_ps / 2)))
         coinc0 = np.intersect1d(s_floor, i_floor, return_indices=True)
         coinc1 = np.intersect1d(s_floor, i_floor - 1, return_indices=True)
         coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
-        self.coinc = np.hstack((coinc0, coinc1, coinc2))
+        coinc = np.hstack((coinc0, coinc1, coinc2))
+
+        s_time = np.array(self.timestamps_signal)[coinc[1]]
+        i_time = np.array(self.timestamps_idler)[coinc[2]]
+        self.dtime = s_time - i_time
+
+        # iterate over coincidence_interval, find max of the max(histo)'s
+        num_steps = 2           # the number of dt's checked for the max
+        for dt in np.arange(0, self.coincidence_interval, self.coincidence_interval/num_steps):
+
+            bins = np.arange(-range_ps / 2 + dt, range_ps / 2 + self.coincidence_interval, self.coincidence_interval)
+            histo = np.histogram(self.dtime, bins)[0]
+            curr_count = max(histo)
+            if curr_count > self.max_counts:
+                self.max_counts = curr_count
+                self.bins = bins
+                self.histo = histo
+            else:
+                break
 
     def get_coincidences(self):
-        return self.coinc.shape[1]
+        return self.max_counts
 
+    def get_car(self):
+        print(self.histo)
+        i = int(np.nonzero(self.histo == self.max_counts)[0])
+        accidentals = np.delete(self.histo, [i - 1, i, i + 1])
+        return self.max_counts/np.mean(accidentals)
 
     def plot_cross_corr(self):
-        x_val = range(-100000, 100000, self.coincidence_interval)
-        y_val = []
-        if len(self.timestamps_signal) > len(self.timestamps_idler):
-            list2 = self.timestamps_signal
-            list1 = self.timestamps_idler
-        else:
-            list1 = self.timestamps_signal
-            list2 = self.timestamps_idler
-
-        for delta_t in x_val:
-            coincidences = []
-            # index in list2 of the left bound
-            left_bound = 0
-            for x in list1:
-                # check interval (x + delta_t - self.coincidence_interval, x + delta_t + self.coincidence_interval)
-                while list2[left_bound] < (x + delta_t) - self.coincidence_interval and left_bound < len(list2) - 1:
-                    left_bound += 1
-                # now x + delta_t - self.coincidence_interval <= larger[left_bound]
-                if list2[left_bound] < (x + delta_t) + self.coincidence_interval:
-                    # x + delta_t and larger[left_bound] are in the same window
-                    # the timestamp of the coincidence is the time of the later event
-                    coincidences.append(max(x + delta_t, list2[left_bound]))
-            # print(len(coincidences))
-            y_val.append(len(coincidences))
-        plt.plot(x_val, y_val)
+        plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
         plt.savefig('plots\\cross_correlation_plot.png', dpi=1000, bbox_inches='tight')
@@ -122,6 +125,8 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    a = Simulator(1, 'config.yaml')
-    print(a.run())
+    a = Simulator(pr=1, yaml_fn='config.yaml')
+    a.run()
+    print(a.get_coincidences())
+    print(a.get_car())
     a.plot_cross_corr()
