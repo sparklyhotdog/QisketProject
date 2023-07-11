@@ -111,10 +111,11 @@ class Simulator:
         return self.max_counts
 
     def get_car(self):
-        i = int(np.nonzero(self.histo == self.max_counts)[0])
-        x = 10
+        i = np.argmax(self.histo)
+        x = 1
         accidentals = np.delete(self.histo, range(i - x, i + x))
-        return self.max_counts/np.mean(accidentals)
+        if np.mean(accidentals) > 0:
+            return self.max_counts/np.mean(accidentals)
 
     def plot_cross_corr(self):
         plt.hist(self.dtime, self.bins)
