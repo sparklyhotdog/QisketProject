@@ -12,7 +12,7 @@ states = ('H', 'D', 'V', 'A')
 
 class Rotation:
 
-    def __init__(self, yaml_fn, entangled_state, rotations):
+    def __init__(self, yaml_fn, entangled_state, rotations=200):
         self.yaml_fn = yaml_fn
         y_fn = open(self.yaml_fn, 'r')
         self.dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
@@ -56,7 +56,7 @@ class Rotation:
                     self.state = Statevector(qc).draw(output='latex_source')
                     self.title = '$' + self.state + '$'
 
-                sim = Simulator(pr_00, 'config.yaml')
+                sim = Simulator('config.yaml', pr_00)
                 sim.run()
                 self.y_val[i].append(sim.get_coincidences())
 

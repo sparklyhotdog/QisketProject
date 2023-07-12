@@ -17,7 +17,7 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
 
     with alive_bar(len(x_val), force_tty=True) as bar:
         for dc in x_val:
-            sim = Simulator(1, yaml_fn)
+            sim = Simulator(yaml_fn)
             sim.set_dc_rate(dc)
             sim.run()
             car = sim.get_car()
@@ -38,7 +38,7 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points):
 
     with alive_bar(len(x_val), force_tty=True) as bar:
         for deadtime in x_val:
-            sim = Simulator(1, yaml_fn)
+            sim = Simulator(yaml_fn)
             sim.set_deadtime(deadtime)
             sim.run()
             car = sim.get_car()
@@ -59,7 +59,7 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
 
     with alive_bar(len(x_val), force_tty=True) as bar:
         for jitter in x_val:
-            sim = Simulator(1, yaml_fn)
+            sim = Simulator(yaml_fn)
             sim.set_jitter(jitter)
             sim.run()
             car = sim.get_car()
@@ -80,7 +80,7 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
 
     with alive_bar(len(x_val), force_tty=True) as bar:
         for loss in x_val:
-            sim = Simulator(1, yaml_fn)
+            sim = Simulator(yaml_fn)
             sim.set_loss_signal(loss)
             sim.set_loss_idler(loss)
             sim.run()
@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
     # plot_car_darkcounts('config.yaml', 0, 90000, 256)
     # plot_car_deadtime('config.yaml', 0, 1000000, 256)
-    plot_car_jitter('config.yaml', 0, 2000, 256)
+    plot_car_jitter('config.yaml', 0, 8000, 1024)
     # plot_car_loss('config.yaml', 0, 1, 256)
 
     # plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 4)

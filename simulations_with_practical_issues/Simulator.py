@@ -7,7 +7,7 @@ import yaml
 
 class Simulator:
 
-    def __init__(self, pr, yaml_fn):
+    def __init__(self, yaml_fn, pr=1):
         self.yaml_fn = yaml_fn
         y_fn = open(self.yaml_fn, 'r')
         self.dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
@@ -169,7 +169,7 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    a = Simulator(pr=1, yaml_fn='config.yaml')
+    a = Simulator('config.yaml')
     a.run()
     print('Coincidences: ' + str(a.get_coincidences()))
     print('Coincidence-to-Accidental Ratio: ' + str(a.get_car()))
