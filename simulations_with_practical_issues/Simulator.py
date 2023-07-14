@@ -110,21 +110,22 @@ class Simulator:
             else:
                 break
 
+        # TODO: fix CAR calculation
         # ___________________________________________________________________
         # seperate coincidences and accidentals
 
-        epsilon = 1             # the difference in means allowed amoung the accidentals
-        max_i = np.argmax(self.histo)
-        i = 0
-        prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
-        curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
-        while abs(prev - curr) > epsilon:
-            i += 1
-            prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
-            curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
-
-        self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
-        self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
+        # epsilon = 1             # the difference in means allowed amoung the accidentals
+        # max_i = np.argmax(self.histo)
+        # i = 0
+        # prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
+        # curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
+        # while abs(prev - curr) > epsilon:
+        #     i += 1
+        #     prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
+        #     curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
+        #
+        # self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
+        # self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
 
     def plot_cross_corr(self):
         plt.hist(self.dtime, self.bins)
@@ -171,8 +172,8 @@ class Simulator:
 if __name__ == "__main__":
     a = Simulator('config.yaml')
     a.run()
-    print('Coincidences: ' + str(a.get_coincidences()))
-    print('Coincidence-to-Accidental Ratio: ' + str(a.get_car()))
-    print('Coincidences per second: ' + str(a.get_coincidences_per_sec()))
-    print('Accidentals per second: ' + str(a.get_accidentals_per_sec()))
+    # print('Coincidences: ' + str(a.get_coincidences()))
+    # print('Coincidence-to-Accidental Ratio: ' + str(a.get_car()))
+    # print('Coincidences per second: ' + str(a.get_coincidences_per_sec()))
+    # print('Accidentals per second: ' + str(a.get_accidentals_per_sec()))
     a.plot_cross_corr()
