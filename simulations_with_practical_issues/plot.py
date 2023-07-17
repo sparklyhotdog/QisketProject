@@ -10,13 +10,13 @@ rotations = 50
 states = ['H', 'D', 'V', 'A']
 
 
-def plot_g2_darkcounts(yaml_fn, dc, colors=None):
+def plot_g2_darkcounts(yaml_fn, dc, colors=None, ylim=None):
 
     with alive_bar(len(dc), force_tty=True) as bar:
-
         sim = Simulator(yaml_fn)
 
         for i in range(0, len(dc)):
+
             sim.set_dc_rate(dc[i])
             sim.run()
             if colors is None:
@@ -27,13 +27,23 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None):
 
     plt.xlabel('Time difference (ps)')
     plt.ylabel('Counts')
-    plt.ylim(0, 20)
     plt.legend(title='Dark counts per second')
-    plt.savefig('plots\\g2\\g2_vs_darkcounts', dpi=1000, bbox_inches='tight')
+    title = 'plots\\g2\\g2_vs_darkcounts,' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'dt=' + str(sim.deadtime) + ',' + \
+            'j=' + str(sim.jitter_fwhm)
+
+    if ylim is not None:
+        plt.ylim(0, ylim)
+        title = title + '(0,' + str(ylim) + ').png'
+    else:
+        title = title + '.png'
+
+    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
+def plot_g2_deadtime(yaml_fn, deadtime, colors=None, ylim=None):
 
     with alive_bar(len(deadtime), force_tty=True) as bar:
 
@@ -50,11 +60,22 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
     plt.xlabel('Time difference (ps)')
     plt.ylabel('Counts')
     plt.legend(title='Dead time (ps)')
-    plt.savefig('plots\\g2\\g2_vs_deadtime', dpi=1000, bbox_inches='tight')
+    title = 'plots\\g2\\g2_vs_deadtime' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal)/2) + ',' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'j=' + str(sim.jitter_fwhm)
+
+    if ylim is not None:
+        plt.ylim(0, ylim)
+        title = title + '(0,' + str(ylim) + ').png'
+    else:
+        title = title + '.png'
+
+    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_g2_jitter(yaml_fn, jitter, colors=None):
+def plot_g2_jitter(yaml_fn, jitter, colors=None, ylim=None):
 
     with alive_bar(len(jitter), force_tty=True) as bar:
 
@@ -73,11 +94,22 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None):
     plt.ylabel('Counts')
     plt.legend(title='Jitter FWHM')
     plt.xlim(-20000, 20000)
-    plt.savefig('plots\\g2\\g2_vs_jitter', dpi=1000, bbox_inches='tight')
+    title = 'plots\\g2\\g2_vs_jitter,' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'dt=' + str(sim.deadtime)
+
+    if ylim is not None:
+        plt.ylim(0, ylim)
+        title = title + '(0,' + str(ylim) + ').png'
+    else:
+        title = title + '.png'
+
+    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_g2_loss(yaml_fn, loss, colors=None):
+def plot_g2_loss(yaml_fn, loss, colors=None, ylim=None):
 
     with alive_bar(len(loss), force_tty=True) as bar:
 
@@ -86,10 +118,13 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
             sim.set_loss_signal(loss[i])
             sim.set_loss_idler(loss[i])
             sim.run()
-            if colors is None:
-                plt.hist(sim.dtime, sim.bins, alpha=0.5, label=loss[i])
-            else:
-                plt.hist(sim.dtime, sim.bins, alpha=0.5, label=loss[i], color=colors[i])
+
+            # TODO: add this to all the others, could be a problem if loss=1
+            if sim.bins[0] != -1:
+                if colors is None:
+                    plt.hist(sim.dtime, sim.bins, alpha=0.5, label=loss[i])
+                else:
+                    plt.hist(sim.dtime, sim.bins, alpha=0.5, label=loss[i], color=colors[i])
             bar()
 
     # TODO: change to decibels
@@ -97,7 +132,18 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
     plt.ylabel('Counts')
     plt.xlim(-10000, 10000)
     plt.legend(title='Optical Loss')
-    plt.savefig('plots\\g2\\g2_vs_loss', dpi=1000, bbox_inches='tight')
+    title = 'plots\\g2\\g2_vs_loss,' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'dt' + str(sim.deadtime) + ',' + \
+            'j=' + str(sim.jitter_fwhm)
+
+    if ylim is not None:
+        plt.ylim(0, ylim)
+        title = title + '(0,' + str(ylim) + ').png'
+    else:
+        title = title + '.png'
+
+    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
@@ -120,7 +166,13 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
     plt.plot(x_val, y_val)
     plt.xlabel('Dark Count Rate (counts/second)')
     plt.ylabel('Coincidence-to-Accidental Rate')
-    plt.savefig('plots\\car\\car_vs_darkcounts', dpi=1000, bbox_inches='tight')
+
+    title = 'plots\\car\\car_vs_darkcounts,' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'dt=' + str(sim.deadtime) + ',' + \
+            'j=' + str(sim.jitter_fwhm) + '.png'
+
+    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
@@ -141,7 +193,13 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points):
     plt.plot(x_val, y_val)
     plt.xlabel('Dead Time (ps)')
     plt.ylabel('Coincidence-to-Accidental Rate')
-    plt.savefig('plots\\car\\car_vs_deadtime', dpi=1000, bbox_inches='tight')
+
+    title = 'plots\\car\\car_vs_deadtime' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal)/2) + ',' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'j=' + str(sim.jitter_fwhm) + '.png'
+
+    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
@@ -162,7 +220,13 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
     plt.plot(x_val, y_val)
     plt.xlabel('Jitter FWHM (ps)')
     plt.ylabel('Coincidence-to-Accidental Rate')
-    plt.savefig('plots\\car\\car_vs_jitter', dpi=1000, bbox_inches='tight')
+
+    title = 'plots\\car\\car_vs_jitter,' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'dt=' + str(sim.deadtime) + '.png'
+
+    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
@@ -186,7 +250,13 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
     plt.ylabel('Coincidence-to-Accidental Rate')
     plt.xscale('log')
     # TODO: change to dB
-    plt.savefig('plots\\car\\car_vs_loss', dpi=1000, bbox_inches='tight')
+
+    title = 'plots\\car\\car_vs_loss,' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'dt' + str(sim.deadtime) + ',' + \
+            'j=' + str(sim.jitter_fwhm) + '.png'
+
+    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
@@ -211,7 +281,13 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points):
     plt.xlabel('Dark Count Rate (counts/second)')
     plt.ylabel('Visibility')
     plt.ylim(0, 1)
-    plt.savefig('plots\\visibility\\visibility_vs_darkcounts', dpi=1000)
+
+    title = 'plots\\visibility\\visibility_vs_darkcounts,' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'dt=' + str(sim.deadtime) + ',' + \
+            'j=' + str(sim.jitter_fwhm) + '.png'
+
+    plt.savefig(title, dpi=1000)
     plt.show()
 
 
@@ -236,7 +312,13 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points):
     plt.xlabel('Dead Time (ps)')
     plt.ylabel('Visibility')
     plt.ylim(0, 1)
-    plt.savefig('plots\\visibility\\visibility_vs_deadtime', dpi=1000)
+
+    title = 'plots\\visibility\\visibility_vs_deadtime' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal)/2) + ',' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'j=' + str(sim.jitter_fwhm) + '.png'
+
+    plt.savefig(title, dpi=1000)
     plt.show()
 
 
@@ -261,7 +343,13 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points):
     plt.xlabel('Jitter FWHM (ps)')
     plt.ylabel('Visibility')
     plt.ylim(0, 1)
-    plt.savefig('plots\\visibility\\visibility_vs_jitter', dpi=1000)
+
+    title = 'plots\\visibility\\visibility_vs_jitter,' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'dt=' + str(sim.deadtime) + '.png'
+
+    plt.savefig(title, dpi=1000)
     plt.show()
 
 
@@ -289,7 +377,13 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points):
     plt.ylim(0, 1)
     # TODO: change to dB
     plt.xscale('log')
-    plt.savefig('plots\\visibility\\visibility_vs_loss', dpi=1000)
+
+    title = 'plots\\visibility\\visibility_vs_loss,' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'dt' + str(sim.deadtime) + ',' + \
+            'j=' + str(sim.jitter_fwhm) + 'png'
+
+    plt.savefig(title, dpi=1000)
     plt.show()
 
 
@@ -314,7 +408,14 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points):
     plt.xlabel('Phase Difference in the Entangled State')
     plt.ylabel('Visibility')
     plt.ylim(0, 1)
-    plt.savefig('plots\\visibility\\visibility_vs_phasediff', dpi=1000)
+
+    title = 'plots\\visibility\\visibility_vs_deadtime' + \
+            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal)/2) + ',' + \
+            'dc=' + str(sim.dark_count_rate) + ',' + \
+            'dt=' + str(sim.deadtime) + ',' + \
+            'j=' + str(sim.jitter_fwhm) + '.png'
+
+    plt.savefig(title, dpi=1000)
     plt.show()
 
 
@@ -322,14 +423,15 @@ if __name__ == '__main__':
     d = .25
     qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
 
-    # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 10000], ['C1', 'C8', 'C2', 'C0'])
+    # TODO: figure out why stuck on 2nd iteration when jitter = 100
+    plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'], 200)
     # plot_g2_deadtime('config.yaml', [0, 10000, 1000000, 10000000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 100000], ['C3', 'C1', 'C2', 'C0', 'C4'])
-    plot_g2_loss('config.yaml', [0, 0.2, 0.4, 0.6, 0.8, 1], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
+    # plot_g2_loss('config.yaml', [0, 0.2, 0.4, 0.6, 0.8, 1], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
-    # plot_car_darkcounts('config.yaml', 0, 10000, 32)
+    # plot_car_darkcounts('config.yaml', 0, 10000, 8)
     # plot_car_deadtime('config.yaml', 0, 1000000, 256)
-    # plot_car_jitter('config.yaml', 0, 8000, 1024)
+    # plot_car_jitter('config.yaml', 0, 8000, 32)
     # plot_car_loss('config.yaml', 0, 1, 256)
 
     # plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 4)

@@ -30,7 +30,7 @@ class Simulator:
         self.max_counts = 0
         self.histo = 0
         self.dtime = 0
-        self.bins = 0
+        self.bins = [-1]
         self.accidentals = 0
         self.coincidences = 0
 
@@ -53,8 +53,6 @@ class Simulator:
         sigma = self.jitter_fwhm / (2 * math.sqrt(2 * math.log(2)))
         for i in range(len(self.timestamps_signal)):
             self.timestamps_signal[i] += math.floor(random.gauss(0, sigma))
-            while self.timestamps_signal[i] < 0:
-                self.timestamps_signal[i] += math.floor(random.gauss(0, sigma))
         for i in range(len(self.timestamps_idler)):
             self.timestamps_idler[i] += math.floor(random.gauss(0, sigma))
             while self.timestamps_idler[i] < 0:
@@ -80,6 +78,14 @@ class Simulator:
                 del self.timestamps_idler[index + 1]
             else:
                 index += 1
+
+        # store timestamps in a text file
+        with open('timestamps_signal', 'w') as s:
+            for timestamp in self.timestamps_signal:
+                print(timestamp, file=s)
+        with open('timestamps_idler', 'w') as i:
+            for timestamp in self.timestamps_idler:
+                print(timestamp, file=i)
 
         # ___________________________________________________________________
         # count coincidences
@@ -110,22 +116,25 @@ class Simulator:
                 else:
                     break
 
-            # TODO: fix CAR calculation
+            # TODO: fix CAR calculation for edge cases (index out of bounds)
             # ___________________________________________________________________
             # seperate coincidences and accidentals
-
-            epsilon = 1             # the difference in means allowed amoung the accidentals
+            epsilon = 10             # the difference in means allowed amoung the accidentals
             max_i = np.argmax(self.histo)
             i = 0
-            prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
-            curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
-            while abs(prev - curr) > epsilon:
+            interval = 5
+            prev = np.split(self.histo, [max_i - interval, max_i])[1]
+            curr = np.split(self.histo, [max_i - 1 - interval, max_i - 1])[1]
+            while abs(np.mean(prev) - np.mean(curr)) > epsilon:
                 i += 1
-                prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
-                curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
+                prev = np.split(self.histo, [max_i - interval - i, max_i - i])[1]
+                curr = np.split(self.histo, [max_i - 1 - interval - i, max_i - 1 - i])[1]
 
             self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
             self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
+
+            # print(self.histo)
+            # print(i)
 
     def plot_cross_corr(self):
         plt.hist(self.dtime, self.bins)
