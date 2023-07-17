@@ -14,8 +14,9 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None):
 
     with alive_bar(len(dc), force_tty=True) as bar:
 
+        sim = Simulator(yaml_fn)
+
         for i in range(0, len(dc)):
-            sim = Simulator(yaml_fn)
             sim.set_dc_rate(dc[i])
             sim.run()
             if colors is None:
@@ -57,8 +58,9 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None):
 
     with alive_bar(len(jitter), force_tty=True) as bar:
 
+        sim = Simulator(yaml_fn)
+
         for i in range(0, len(jitter)):
-            sim = Simulator(yaml_fn)
             sim.set_jitter(jitter[i])
             sim.run()
             if colors is None:
@@ -90,6 +92,7 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
                 plt.hist(sim.dtime, sim.bins, alpha=0.5, label=loss[i], color=colors[i])
             bar()
 
+    # TODO: change to decibels
     plt.xlabel('Time difference (ps)')
     plt.ylabel('Counts')
     plt.xlim(-10000, 10000)
@@ -104,8 +107,10 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
     y_val = []
 
     with alive_bar(num_points, force_tty=True) as bar:
+
+        sim = Simulator(yaml_fn)
+
         for dc in x_val:
-            sim = Simulator(yaml_fn)
             sim.set_dc_rate(dc)
             sim.run()
             car = sim.get_car()
@@ -180,6 +185,7 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
     plt.xlabel('Optical Loss')
     plt.ylabel('Coincidence-to-Accidental Rate')
     plt.xscale('log')
+    # TODO: change to dB
     plt.savefig('plots\\car\\car_vs_loss', dpi=1000, bbox_inches='tight')
     plt.show()
 
@@ -281,6 +287,8 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points):
     plt.xlabel('Optical Loss')
     plt.ylabel('Visibility')
     plt.ylim(0, 1)
+    # TODO: change to dB
+    plt.xscale('log')
     plt.savefig('plots\\visibility\\visibility_vs_loss', dpi=1000)
     plt.show()
 
@@ -319,7 +327,7 @@ if __name__ == '__main__':
     # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 100000], ['C3', 'C1', 'C2', 'C0', 'C4'])
     plot_g2_loss('config.yaml', [0, 0.2, 0.4, 0.6, 0.8, 1], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
-    # plot_car_darkcounts('config.yaml', 0, 90000, 256)
+    # plot_car_darkcounts('config.yaml', 0, 10000, 32)
     # plot_car_deadtime('config.yaml', 0, 1000000, 256)
     # plot_car_jitter('config.yaml', 0, 8000, 1024)
     # plot_car_loss('config.yaml', 0, 1, 256)

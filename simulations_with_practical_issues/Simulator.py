@@ -28,11 +28,11 @@ class Simulator:
         self.timestamps_idler = []
 
         self.max_counts = 0
-        self.histo = np.array
-        self.dtime = np.array
-        self.bins = np.array
-        self.accidentals = np.array
-        self.coincidences = np.array
+        self.histo = 0
+        self.dtime = 0
+        self.bins = 0
+        self.accidentals = 0
+        self.coincidences = 0
 
     def run(self):
         # generate pseudo timestamps following an exponential distribution
@@ -83,49 +83,49 @@ class Simulator:
 
         # ___________________________________________________________________
         # count coincidences
+        if len(self.timestamps_signal) > 0 and len(self.timestamps_idler):
+            range_ps = 200000           # checks the time difference for (-range_ps/2, range_ps/2)
 
-        range_ps = 200000           # checks the time difference for (-range_ps/2, range_ps/2)
+            s_floor = np.int64(np.floor(np.array(self.timestamps_signal) / (range_ps / 2)))
+            i_floor = np.int64(np.floor(np.array(self.timestamps_idler) / (range_ps / 2)))
+            coinc0 = np.intersect1d(s_floor, i_floor, return_indices=True)
+            coinc1 = np.intersect1d(s_floor, i_floor - 1, return_indices=True)
+            coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
+            coinc = np.hstack((coinc0, coinc1, coinc2))
 
-        s_floor = np.int64(np.floor(np.array(self.timestamps_signal) / (range_ps / 2)))
-        i_floor = np.int64(np.floor(np.array(self.timestamps_idler) / (range_ps / 2)))
-        coinc0 = np.intersect1d(s_floor, i_floor, return_indices=True)
-        coinc1 = np.intersect1d(s_floor, i_floor - 1, return_indices=True)
-        coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
-        coinc = np.hstack((coinc0, coinc1, coinc2))
+            s_time = np.array(self.timestamps_signal)[coinc[1]]
+            i_time = np.array(self.timestamps_idler)[coinc[2]]
+            self.dtime = s_time - i_time
 
-        s_time = np.array(self.timestamps_signal)[coinc[1]]
-        i_time = np.array(self.timestamps_idler)[coinc[2]]
-        self.dtime = s_time - i_time
+            # iterate over coincidence_interval, find max of the max(histo)'s
+            num_steps = 2           # the number of dt's checked for the max
+            for dt in np.arange(0, self.coincidence_interval, self.coincidence_interval/num_steps):
+                bins = np.arange(-range_ps/2 + dt, range_ps/2 + self.coincidence_interval, self.coincidence_interval)
+                histo = np.histogram(self.dtime, bins)[0]
+                curr_count = max(histo)
+                if curr_count > self.max_counts:
+                    self.max_counts = curr_count
+                    self.bins = bins
+                    self.histo = histo
+                else:
+                    break
 
-        # iterate over coincidence_interval, find max of the max(histo)'s
-        num_steps = 2           # the number of dt's checked for the max
-        for dt in np.arange(0, self.coincidence_interval, self.coincidence_interval/num_steps):
-            bins = np.arange(-range_ps / 2 + dt, range_ps / 2 + self.coincidence_interval, self.coincidence_interval)
-            histo = np.histogram(self.dtime, bins)[0]
-            curr_count = max(histo)
-            if curr_count > self.max_counts:
-                self.max_counts = curr_count
-                self.bins = bins
-                self.histo = histo
-            else:
-                break
+            # TODO: fix CAR calculation
+            # ___________________________________________________________________
+            # seperate coincidences and accidentals
 
-        # TODO: fix CAR calculation
-        # ___________________________________________________________________
-        # seperate coincidences and accidentals
+            epsilon = 1             # the difference in means allowed amoung the accidentals
+            max_i = np.argmax(self.histo)
+            i = 0
+            prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
+            curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
+            while abs(prev - curr) > epsilon:
+                i += 1
+                prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
+                curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
 
-        # epsilon = 1             # the difference in means allowed amoung the accidentals
-        # max_i = np.argmax(self.histo)
-        # i = 0
-        # prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
-        # curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
-        # while abs(prev - curr) > epsilon:
-        #     i += 1
-        #     prev = np.mean(np.delete(self.histo, range(max_i - i, max_i + i + 1)))
-        #     curr = np.mean(np.delete(self.histo, range(max_i - i - 1, max_i + i + 2)))
-        #
-        # self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
-        # self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
+            self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
+            self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
 
     def plot_cross_corr(self):
         plt.hist(self.dtime, self.bins)
@@ -172,8 +172,8 @@ class Simulator:
 if __name__ == "__main__":
     a = Simulator('config.yaml')
     a.run()
-    # print('Coincidences: ' + str(a.get_coincidences()))
-    # print('Coincidence-to-Accidental Ratio: ' + str(a.get_car()))
-    # print('Coincidences per second: ' + str(a.get_coincidences_per_sec()))
-    # print('Accidentals per second: ' + str(a.get_accidentals_per_sec()))
+    print('Coincidences: ' + str(a.get_coincidences()))
+    print('Coincidence-to-Accidental Ratio: ' + str(a.get_car()))
+    print('Coincidences per second: ' + str(a.get_coincidences_per_sec()))
+    print('Accidentals per second: ' + str(a.get_accidentals_per_sec()))
     a.plot_cross_corr()
