@@ -143,7 +143,7 @@ class Simulator:
         plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
-        plt.yscale('log')
+        # plt.yscale('log')
         plt.ylim(0.5, 10 ** math.ceil(math.log10(self.max_counts)))
         plt.savefig('plots\\cross_correlation_plot.png', dpi=1000, bbox_inches='tight')
         plt.show()
