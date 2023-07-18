@@ -1,9 +1,10 @@
 lambd: 100000                   # average count rate (counts/second)
 total_time: 1                   # (seconds)
 lag: 0                      # difference between idler and signal (picoseconds)
-optical_loss_signal: 0        # probability of not being detected for the signal photons
-optical_loss_idler: 0         # probability of not being detected for the idler photons
+# TODO: store loss in dB?
+optical_loss_signal: 0.1        # probability of not being detected for the signal photons
+optical_loss_idler: 0.1         # probability of not being detected for the idler photons
 dark_count_rate: 1000           # (counts/second)
-deadtime: 0               # (picoseconds)
-jitter_fwhm: 0                # (picoseconds)
+deadtime: 100000               # (picoseconds)
+jitter_fwhm: 100                # (picoseconds)
 coincidence_interval: 1000      # (picoseconds)

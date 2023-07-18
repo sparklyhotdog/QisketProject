@@ -51,11 +51,14 @@ class Simulator:
 
         # jitter
         sigma = self.jitter_fwhm / (2 * math.sqrt(2 * math.log(2)))
-        for i in range(len(self.timestamps_signal)):
-            self.timestamps_signal[i] += math.floor(random.gauss(0, sigma))
-        for i in range(len(self.timestamps_idler)):
-            self.timestamps_idler[i] += math.floor(random.gauss(0, sigma))
-            while self.timestamps_idler[i] < 0:
+        if len(self.timestamps_signal) > 0:
+            self.timestamps_signal[0] += abs(math.floor(random.gauss(0, sigma)))
+            for i in range(1, len(self.timestamps_signal)):
+                self.timestamps_signal[i] += math.floor(random.gauss(0, sigma))
+
+        if len(self.timestamps_idler) > 0:
+            self.timestamps_idler[0] += abs(math.floor(random.gauss(0, sigma)))
+            for i in range(1, len(self.timestamps_idler)):
                 self.timestamps_idler[i] += math.floor(random.gauss(0, sigma))
 
         # generate dark counts
@@ -89,7 +92,7 @@ class Simulator:
 
         # ___________________________________________________________________
         # count coincidences
-        if len(self.timestamps_signal) > 0 and len(self.timestamps_idler):
+        if len(self.timestamps_signal) > 0 and len(self.timestamps_idler) > 0:
             range_ps = 200000           # checks the time difference for (-range_ps/2, range_ps/2)
 
             s_floor = np.int64(np.floor(np.array(self.timestamps_signal) / (range_ps / 2)))
@@ -140,6 +143,8 @@ class Simulator:
         plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
+        plt.yscale('log')
+        plt.ylim(0.5, 10 ** math.ceil(math.log10(self.max_counts)))
         plt.savefig('plots\\cross_correlation_plot.png', dpi=1000, bbox_inches='tight')
         plt.show()
 
