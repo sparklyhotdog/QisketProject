@@ -21,19 +21,11 @@ class Rotation:
         self.lambd = self.dicty['lambd']
         self.total_time = self.dicty['total_time']
         self.n = self.lambd * self.total_time
-        self.lag = self.dicty['lag']
-        self.optical_loss_signal = self.dicty['optical_loss_signal']
-        self.optical_loss_idler = self.dicty['optical_loss_idler']
-        self.dark_count_rate = self.dicty['dark_count_rate']
-        self.deadtime = self.dicty['deadtime']
-        self.jitter_fwhm = self.dicty['jitter_fwhm']
-        self.coincidence_interval = self.dicty['coincidence_interval']
         self.entangled_state = entangled_state
         self.rotations = rotations
         self.x_val = []
         self.y_val = [[], [], [], []]
-        self.state = ''
-        self.title = ''
+        self.state_latex = ''
 
     def run(self):
         qc = QuantumCircuit(2, 2)
@@ -52,18 +44,18 @@ class Rotation:
                 delta = 4 * j * math.pi / self.rotations
                 qc.ry(delta, 1)
                 pr_00 = abs(Statevector(qc)[0]) ** 2
-                if i + j == 0:
-                    self.state = Statevector(qc).draw(output='latex_source')
-                    self.title = '$' + self.state + '$'
 
-                sim = Simulator('config.yaml', pr_00)
+                if i + j == 0:
+                    self.state_latex = Statevector(qc).draw(output='latex_source')
+
+                sim = Simulator(self.yaml_fn, pr_00)
                 sim.run()
-                self.y_val[i].append(sim.get_coincidences())
+                self.y_val[i].append(sim.max_counts)
 
                 if i == 0:
                     self.x_val.append(delta)
 
-    def get_visibility(self):
+    def calc_visibility(self):
 
         visibility = []
         for i in range(4):
@@ -74,39 +66,28 @@ class Rotation:
 
         return visibility
 
-    def plot_correlation(self):
+    def plot_correlation(self, path=None, plot_title=None):
 
         fig, ax = plt.subplots()
 
         for i in range(4):
             ax.plot(self.x_val, self.y_val[i], label=states[i])
 
-        ax.set_xlabel("Polarizer Angle for the 2nd Photon")
-        ax.set_ylabel("Counts")
+        ax.set_xlabel('Polarizer Angle for the 2nd Photon')
+        ax.set_ylabel('Counts')
         ax.set_ylim(0 - 40, self.n + 40)
-        ax.set_title(self.title)
+
+        # default is to put the entangled state as the title
+        if plot_title is None:
+            ax.set_title('$' + self.state_latex + '$')
+        else:
+            ax.set_title(plot_title)
+
         ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
         plt.legend()
-        plt.savefig('plots\\polarization_correlation.png', dpi=1000, bbox_inches='tight')
+        if path is not None:
+            plt.savefig(path, dpi=1000, bbox_inches='tight')
         plt.show()
-
-    def set_dc_rate(self, dc):
-        self.dark_count_rate = dc
-
-    def set_loss_signal(self, loss):
-        self.optical_loss_signal = loss
-
-    def set_loss_idler(self, loss):
-        self.optical_loss_idler = loss
-
-    def set_jitter(self, jitter):
-        self.jitter_fwhm = jitter
-
-    def set_deadtime(self, deadtime):
-        self.deadtime = deadtime
-
-    def set_plt_title(self, title):
-        self.title = title
 
 
 if __name__ == '__main__':
@@ -114,9 +95,8 @@ if __name__ == '__main__':
     state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
     # default title expands the complex number into floats
     # we set the title to keep it in its exponential form
-    titl = '$\\frac{\sqrt{2}}{2} |00\\rangle+e^{i\cdot' + str(d) + '}|11\\rangle$'
     a = Rotation('config.yaml', state, rotations=50)
     a.run()
-    a.set_plt_title(titl)
-    print(a.get_visibility())
-    a.plot_correlation()
+    print(a.calc_visibility())
+    titl = '$\\frac{\sqrt{2}}{2} |00\\rangle+e^{' + str(d) + 'i}|11\\rangle$'
+    a.plot_correlation('plots\\polarization_correlation.png', titl)

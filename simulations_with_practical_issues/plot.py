@@ -6,20 +6,22 @@ import matplotlib.pyplot as plt
 from alive_progress import alive_bar
 
 
-rotations = 50
 states = ['H', 'D', 'V', 'A']
 
 
 def plot_g2_darkcounts(yaml_fn, dc, colors=None):
 
     with alive_bar(len(dc), force_tty=True) as bar:
+
         sim = Simulator(yaml_fn)
         max_max = 0
-        for i in range(0, len(dc)):
 
-            sim.set_dc_rate(dc[i])
+        for i in range(len(dc)):
+
+            sim.dark_count_rate = dc[i]
             sim.run()
-            if sim.bins[0] != -1:
+            if sim.bins is not None:
+
                 if colors is None:
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=dc[i])
                 else:
@@ -40,8 +42,8 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
@@ -55,11 +57,13 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
 
         max_max = 0
 
-        for i in range(0, len(deadtime)):
+        for i in range(len(deadtime)):
             sim = Simulator(yaml_fn)
-            sim.set_deadtime(deadtime[i])
+            sim.dead_time = deadtime[i]
             sim.run()
-            if sim.bins[0] != -1:
+
+            if sim.bins is not None:
+
                 if colors is None:
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=deadtime[i])
                 else:
@@ -80,7 +84,7 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
@@ -92,14 +96,17 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
 def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
 
     with alive_bar(len(jitter), force_tty=True) as bar:
+
         fig, ax = plt.subplots()
 
-        for i in range(0, len(jitter)):
-            sim = Simulator(yaml_fn)
+        for i in range(len(jitter)):
 
-            sim.set_jitter(jitter[i])
+            sim = Simulator(yaml_fn)
+            sim.jitter_fwhm = jitter[i]
             sim.run()
-            if sim.bins[0] != -1:
+
+            if sim.bins is not None:
+
                 if colors is None:
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=jitter[i])
                 else:
@@ -133,14 +140,19 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
     plt.legend(title='Jitter FWHM')
     plt.xlim(-20000, 20000)
 
+    if fwhm:
+        fwhm_str = '_fwhm'
+    else:
+        fwhm_str = ''
+
     title = 'plots\\g2\\g2_vs_jitter\\' + \
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+            'dt=' + str(sim.dead_time) + ',' + \
+            'ci=' + str(sim.coincidence_interval) + fwhm_str + '.png'
 
     plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
@@ -151,15 +163,19 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
     with alive_bar(len(loss), force_tty=True) as bar:
 
         max_max = 0
+
         for i in range(len(loss)):
+
             sim = Simulator(yaml_fn)
             loss_pr = 10 ** (loss[i]/10)
-            sim.set_loss_signal(loss_pr)
-            sim.set_loss_idler(loss_pr)
+            sim.loss_signal = loss_pr
+            sim.loss_idler = loss_pr
             sim.run()
 
-            if sim.bins[0] != -1:
+            if sim.bins[0] is not None:
+
                 if colors is None:
+
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=loss[i])
                 else:
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=loss[i], color=colors[i])
@@ -181,7 +197,7 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
@@ -199,9 +215,9 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
         sim = Simulator(yaml_fn)
 
         for dc in x_val:
-            sim.set_dc_rate(dc)
+            sim.dark_count_rate = dc
             sim.run()
-            car = sim.get_car()
+            car = sim.calc_car()
             y_val.append(car)
             bar()
 
@@ -213,8 +229,8 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
@@ -228,11 +244,12 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points):
     y_val = []
 
     with alive_bar(num_points, force_tty=True) as bar:
+
         for deadtime in x_val:
             sim = Simulator(yaml_fn)
-            sim.set_deadtime(deadtime)
+            sim.dead_time = deadtime
             sim.run()
-            car = sim.get_car()
+            car = sim.calc_car()
             y_val.append(car)
             bar()
 
@@ -244,7 +261,7 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
@@ -259,11 +276,12 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
     y_val = []
 
     with alive_bar(num_points, force_tty=True) as bar:
+
         for jitter in x_val:
             sim = Simulator(yaml_fn)
-            sim.set_jitter(jitter)
+            sim.jitter = jitter
             sim.run()
-            car = sim.get_car()
+            car = sim.calc_car()
             y_val.append(car)
             bar()
 
@@ -275,9 +293,9 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
     plt.savefig(title, dpi=1000, bbox_inches='tight')
@@ -290,12 +308,13 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
     y_val = []
 
     with alive_bar(num_points, force_tty=True) as bar:
+
         for loss in x_val:
             sim = Simulator(yaml_fn)
-            sim.set_loss_signal(loss)
-            sim.set_loss_idler(loss)
+            sim.loss_signal = loss
+            sim.loss_idler = loss
             sim.run()
-            car = sim.get_car()
+            car = sim.calc_car()
             y_val.append(car)
             bar()
 
@@ -308,7 +327,7 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
@@ -316,17 +335,18 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
     plt.show()
 
 
-def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points):
+def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotations=50):
 
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
     with alive_bar(num_points, force_tty=True) as bar:
+
         for dc in x_val:
             sim = Rotation(yaml_fn, state, rotations)
-            sim.set_dc_rate(dc)
+            sim.dark_count_rate = dc
             sim.run()
-            visibility = sim.get_visibility()
+            visibility = sim.calc_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
             bar()
@@ -342,8 +362,8 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
@@ -351,17 +371,18 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points):
     plt.show()
 
 
-def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points):
+def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=50):
 
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
     with alive_bar(num_points, force_tty=True) as bar:
+
         for deadtime in x_val:
             sim = Rotation(yaml_fn, state, rotations)
-            sim.set_deadtime(deadtime)
+            sim.dead_time = deadtime
             sim.run()
-            visibility = sim.get_visibility()
+            visibility = sim.calc_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
             bar()
@@ -377,7 +398,7 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
@@ -386,17 +407,18 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points):
     plt.show()
 
 
-def plot_visibility_jitter(yaml_fn, state, start, stop, num_points):
+def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50):
 
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
     with alive_bar(num_points, force_tty=True) as bar:
+
         for jitter in x_val:
             sim = Rotation(yaml_fn, state, rotations)
-            sim.set_jitter(jitter)
+            sim.jitter = jitter
             sim.run()
-            visibility = sim.get_visibility()
+            visibility = sim.calc_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
             bar()
@@ -412,28 +434,29 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
     plt.savefig(title, dpi=1000)
     plt.show()
 
 
-def plot_visibility_loss(yaml_fn, state, start, stop, num_points):
+def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50):
 
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
     with alive_bar(num_points, force_tty=True) as bar:
+
         for loss in x_val:
             sim = Rotation(yaml_fn, state, rotations)
             loss_pr = 10 ** (loss / 10)
-            sim.set_loss_signal(loss_pr)
-            sim.set_loss_idler(loss_pr)
+            sim.loss_signal = loss_pr
+            sim.loss_idler = loss_pr
             sim.run()
-            visibility = sim.get_visibility()
+            visibility = sim.calc_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
             bar()
@@ -450,7 +473,7 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points):
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
@@ -458,17 +481,18 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points):
     plt.show()
 
 
-def plot_visibility_phasediff(yaml_fn, start, stop, num_points):
+def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50):
 
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
     with alive_bar(num_points, force_tty=True) as bar:
+
         for delta in x_val:
             entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
             sim = Rotation(yaml_fn, entangled_state, rotations)
             sim.run()
-            visibility = sim.get_visibility()
+            visibility = sim.calc_visibility()
             for i in range(4):
                 y_val[i].append(visibility[i])
             bar()
@@ -484,9 +508,9 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points):
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
             str(sim.total_time) + 's,' + \
-            'l=' + str((sim.optical_loss_idler + sim.optical_loss_signal) / 2) + ',' + \
+            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
             'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.deadtime) + ',' + \
+            'dt=' + str(sim.dead_time) + ',' + \
             'j=' + str(sim.jitter_fwhm) + ',' \
             'ci=' + str(sim.coincidence_interval) + '.png'
 
@@ -500,10 +524,10 @@ if __name__ == '__main__':
 
     # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
-    # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 100000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
+    plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 50000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
     # plot_g2_loss('config.yaml', [-10, -6, -3, -1, 0], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
-    # plot_car_darkcounts('config.yaml', 0, 10000, 64)
+    # plot_car_darkcounts('config.yaml', 0, 10000, 256)
     # plot_car_deadtime('config.yaml', 0, 1000000, 64)
     # plot_car_jitter('config.yaml', 0, 8000, 4096)
     # plot_car_loss('config.yaml', 0, -30, 256)

@@ -17,10 +17,10 @@ class Simulator:
         self.lambd = self.dicty['lambd']
         self.total_time = self.dicty['total_time']
         self.lag = self.dicty['lag']
-        self.optical_loss_signal = self.dicty['optical_loss_signal']
-        self.optical_loss_idler = self.dicty['optical_loss_idler']
+        self.loss_signal = self.dicty['loss_signal']
+        self.loss_idler = self.dicty['loss_idler']
         self.dark_count_rate = self.dicty['dark_count_rate']
-        self.deadtime = self.dicty['deadtime']
+        self.dead_time = self.dicty['dead_time']
         self.jitter_fwhm = self.dicty['jitter_fwhm']
         self.coincidence_interval = self.dicty['coincidence_interval']
 
@@ -28,11 +28,11 @@ class Simulator:
         self.timestamps_idler = []
 
         self.max_counts = 0
-        self.histo = 0
-        self.dtime = 0
-        self.bins = [-1]
-        self.accidentals = 0
-        self.coincidences = 0
+        self.histo = None
+        self.dtime = None
+        self.bins = None
+        self.accidentals = None
+        self.coincidences = None
 
     def run(self):
         # generate pseudo timestamps following an exponential distribution
@@ -44,21 +44,19 @@ class Simulator:
             t += dt
             if random.random() < self.pr:
                 # optical loss
-                if random.random() > self.optical_loss_signal:
+                if random.random() > self.loss_signal:
                     self.timestamps_signal.append(t + self.lag)
-                if random.random() > self.optical_loss_idler:
+                if random.random() > self.loss_idler:
                     self.timestamps_idler.append(t)
 
         # jitter
         sigma = self.jitter_fwhm / (2 * math.sqrt(2 * math.log(2)))
         if len(self.timestamps_signal) > 0:
-            self.timestamps_signal[0] += abs(math.floor(random.gauss(0, sigma)))
-            for i in range(1, len(self.timestamps_signal)):
+            for i in range(len(self.timestamps_signal)):
                 self.timestamps_signal[i] += math.floor(random.gauss(0, sigma))
 
         if len(self.timestamps_idler) > 0:
-            self.timestamps_idler[0] += abs(math.floor(random.gauss(0, sigma)))
-            for i in range(1, len(self.timestamps_idler)):
+            for i in range(len(self.timestamps_idler)):
                 self.timestamps_idler[i] += math.floor(random.gauss(0, sigma))
 
         # generate dark counts
@@ -71,22 +69,22 @@ class Simulator:
         # deadtime
         index = 0
         while index < len(self.timestamps_signal) - 1:
-            if self.timestamps_signal[index + 1] - self.timestamps_signal[index] < self.deadtime:
+            if self.timestamps_signal[index + 1] - self.timestamps_signal[index] < self.dead_time:
                 del self.timestamps_signal[index + 1]
             else:
                 index += 1
         index = 0
         while index < len(self.timestamps_idler) - 1:
-            if self.timestamps_idler[index + 1] - self.timestamps_idler[index] < self.deadtime:
+            if self.timestamps_idler[index + 1] - self.timestamps_idler[index] < self.dead_time:
                 del self.timestamps_idler[index + 1]
             else:
                 index += 1
 
         # store timestamps in a text file
-        with open('timestamps_signal', 'w') as s:
+        with open('timestamps_signal.txt', 'w') as s:
             for timestamp in self.timestamps_signal:
                 print(timestamp, file=s)
-        with open('timestamps_idler', 'w') as i:
+        with open('timestamps_idler.txt', 'w') as i:
             for timestamp in self.timestamps_idler:
                 print(timestamp, file=i)
 
@@ -139,55 +137,38 @@ class Simulator:
             # print(self.histo)
             # print(i)
 
-    def plot_cross_corr(self):
+    def plot_cross_corr(self, path=None):
         plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
         # plt.yscale('log')
         plt.ylim(0.5, 10 ** math.ceil(math.log10(self.max_counts)))
-        plt.savefig('plots\\cross_correlation_plot.png', dpi=1000, bbox_inches='tight')
+        if path is not None:
+            plt.savefig(path, dpi=1000, bbox_inches='tight')
         plt.show()
 
-    def get_car(self):
+    def calc_car(self):
         if np.mean(self.accidentals) > 0:
             return self.max_counts/np.mean(self.accidentals)
 
-    def get_coincidences(self):
-        return self.max_counts
-
-    def get_coincidences_per_sec(self):
+    def calc_coincidences_per_sec(self):
         # total collection time for the signal and idler (in seconds)
         t_signal = (self.timestamps_signal[-1] - self.timestamps_signal[0])/1e12
         t_idler = (self.timestamps_idler[-1] - self.timestamps_idler[0])/1e12
         return 2 * sum(self.coincidences) / (t_signal + t_idler)
 
-    def get_accidentals_per_sec(self):
+    def calc_accidentals_per_sec(self):
         # total collection time for the signal and idler (in seconds)
         t_signal = (self.timestamps_signal[-1] - self.timestamps_signal[0]) / 1e12
         t_idler = (self.timestamps_idler[-1] - self.timestamps_idler[0]) / 1e12
         return 2 * sum(self.accidentals) / (t_signal + t_idler)
 
-    def set_dc_rate(self, dc):
-        self.dark_count_rate = dc
-
-    def set_loss_signal(self, loss):
-        self.optical_loss_signal = loss
-
-    def set_loss_idler(self, loss):
-        self.optical_loss_idler = loss
-
-    def set_jitter(self, jitter):
-        self.jitter_fwhm = jitter
-
-    def set_deadtime(self, deadtime):
-        self.deadtime = deadtime
-
 
 if __name__ == "__main__":
     a = Simulator('config.yaml')
     a.run()
-    print('Coincidences: ' + str(a.get_coincidences()))
-    print('Coincidence-to-Accidental Ratio: ' + str(a.get_car()))
-    print('Coincidences per second: ' + str(a.get_coincidences_per_sec()))
-    print('Accidentals per second: ' + str(a.get_accidentals_per_sec()))
-    a.plot_cross_corr()
+    print('Coincidences: ' + str(a.max_counts))
+    print('Coincidence-to-Accidental Ratio: ' + str(a.calc_car()))
+    print('Coincidences per second: ' + str(a.calc_coincidences_per_sec()))
+    print('Accidentals per second: ' + str(a.calc_accidentals_per_sec()))
+    a.plot_cross_corr('plots\\cross_correlation_plot.png')

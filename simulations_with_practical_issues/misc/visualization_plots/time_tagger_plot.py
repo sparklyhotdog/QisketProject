@@ -7,7 +7,7 @@ import copy
 import matplotlib.markers
 
 lambd = 100000              # average count rate (100k counts/second)
-n = 15                      # total number of events (1 mil)
+n = 10                      # total number of events (1 mil)
 optical_loss = 0.3          # probability of not being detected for the signal photons
 dark_count_rate = 50000     # (counts/second)
 deadtime = 3000000          # (picoseconds)
@@ -58,7 +58,7 @@ x_lim_r = original_timestamps[-1] + 1000000
 
 fig, axs = plt.subplots(5, 1)
 fig.tight_layout(pad=2)
-fig.set_size_inches(8, 8)
+fig.set_size_inches(6, 6)
 
 original = plt.subplot(5, 1, 1)
 optical_loss = plt.subplot(5, 1, 2)
