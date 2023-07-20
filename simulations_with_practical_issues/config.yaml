@@ -1,9 +1,9 @@
 lambd: 11000                    # average count rate (counts/second)
-total_time: 1                   # (seconds)
+total_time: 10                  # (seconds)
 lag: 0                          # difference between idler and signal (picoseconds)
 loss_signal: 0.1                # probability of not being detected for the signal photons
 loss_idler: 0.1                 # probability of not being detected for the idler photons
 dark_count_rate: 1000           # (counts/second)
 dead_time: 100000               # (picoseconds)
 jitter_fwhm: 100                # (picoseconds)
-coincidence_interval: 10000     # (picoseconds)
+coincidence_interval: 1000      # (picoseconds)

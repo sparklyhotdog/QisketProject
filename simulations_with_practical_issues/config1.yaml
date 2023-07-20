@@ -1,0 +1,5 @@
+loss_signal: 0.1
+loss_idler: 0.1
+dark_count_rate: 10000
+dead_time: 100000
+jitter_fwhm: 100

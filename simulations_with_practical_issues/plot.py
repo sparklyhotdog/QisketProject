@@ -19,7 +19,8 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None):
         for i in range(len(dc)):
 
             sim.dark_count_rate = dc[i]
-            sim.run()
+            sim.generate_timestamps()
+            sim.cross_corr()
             if sim.bins is not None:
 
                 if colors is None:
@@ -58,9 +59,11 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
         max_max = 0
 
         for i in range(len(deadtime)):
+
             sim = Simulator(yaml_fn)
             sim.dead_time = deadtime[i]
-            sim.run()
+            sim.generate_timestamps()
+            sim.cross_corr()
 
             if sim.bins is not None:
 
@@ -103,7 +106,8 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
 
             sim = Simulator(yaml_fn)
             sim.jitter_fwhm = jitter[i]
-            sim.run()
+            sim.generate_timestamps()
+            sim.cross_corr()
 
             if sim.bins is not None:
 
@@ -170,7 +174,8 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
             loss_pr = 10 ** (loss[i]/10)
             sim.loss_signal = loss_pr
             sim.loss_idler = loss_pr
-            sim.run()
+            sim.generate_timestamps()
+            sim.cross_corr()
 
             if sim.bins[0] is not None:
 
@@ -216,9 +221,9 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
 
         for dc in x_val:
             sim.dark_count_rate = dc
-            sim.run()
-            car = sim.calc_car()
-            y_val.append(car)
+            sim.generate_timestamps()
+            sim.cross_corr()
+            y_val.append(sim.car)
             bar()
 
     plt.plot(x_val, y_val)
@@ -248,9 +253,9 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points):
         for deadtime in x_val:
             sim = Simulator(yaml_fn)
             sim.dead_time = deadtime
-            sim.run()
-            car = sim.calc_car()
-            y_val.append(car)
+            sim.generate_timestamps()
+            sim.cross_corr()
+            y_val.append(sim.car)
             bar()
 
     plt.plot(x_val, y_val)
@@ -280,9 +285,9 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
         for jitter in x_val:
             sim = Simulator(yaml_fn)
             sim.jitter = jitter
-            sim.run()
-            car = sim.calc_car()
-            y_val.append(car)
+            sim.generate_timestamps()
+            sim.cross_corr()
+            y_val.append(sim.car)
             bar()
 
     plt.plot(x_val, y_val)
@@ -313,9 +318,9 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
             sim = Simulator(yaml_fn)
             sim.loss_signal = loss
             sim.loss_idler = loss
-            sim.run()
-            car = sim.calc_car()
-            y_val.append(car)
+            sim.generate_timestamps()
+            sim.cross_corr()
+            y_val.append(sim.car)
             bar()
 
     plt.plot(np.linspace(start, stop, num_points), y_val)

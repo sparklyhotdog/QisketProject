@@ -49,7 +49,8 @@ class Rotation:
                     self.state_latex = Statevector(qc).draw(output='latex_source')
 
                 sim = Simulator(self.yaml_fn, pr_00)
-                sim.run()
+                sim.generate_timestamps()
+                sim.cross_corr()
                 self.y_val[i].append(sim.max_counts)
 
                 if i == 0:

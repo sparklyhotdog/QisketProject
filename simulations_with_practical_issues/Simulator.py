@@ -5,6 +5,75 @@ import numpy as np
 import yaml
 
 
+def modify_timestamps(in_timestamp_fn, out_timestamp_fn, yaml_fn):
+
+    # load in timestamps
+    signal = []
+    idler = []
+    with open(in_timestamp_fn[0]) as s:
+        for line in s:
+            signal.append(int(line))
+
+    with open(in_timestamp_fn[1]) as i:
+        for line in i:
+            idler.append(int(line))
+
+    y_fn = open(yaml_fn, 'r')
+    dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
+    y_fn.close()
+
+    loss_signal = dicty['loss_signal']
+    loss_idler = dicty['loss_idler']
+    dark_count_rate = dicty['dark_count_rate']
+    dead_time = dicty['dead_time']
+    jitter_fwhm = dicty['jitter_fwhm']
+
+    # optical loss
+    for x in signal:
+        if random.random() < loss_signal:
+            signal.remove(x)
+    for x in idler:
+        if random.random() < loss_idler:
+            idler.remove(x)
+
+    # jitter
+    sigma = jitter_fwhm / (2 * math.sqrt(2 * math.log(2)))
+    for i in range(len(signal)):
+        signal[i] += math.floor(random.gauss(0, sigma))
+    for i in range(len(idler)):
+        idler[i] += math.floor(random.gauss(0, sigma))
+
+    # dark counts
+    time = math.floor((signal[-1] + idler[-1])/2)
+    for i in range(math.floor(time * dark_count_rate / 1e12)):
+        signal.append(math.floor(random.random() * time))
+        idler.append(math.floor(random.random() * time))
+    signal.sort()
+    idler.sort()
+
+    # dead time
+    index = 0
+    while index < len(signal) - 1:
+        if signal[index + 1] - signal[index] < dead_time:
+            del signal[index + 1]
+        else:
+            index += 1
+    index = 0
+    while index < len(idler) - 1:
+        if idler[index + 1] - idler[index] < dead_time:
+            del idler[index + 1]
+        else:
+            index += 1
+
+    # store new timestamps in text files
+    with open(out_timestamp_fn[0], 'w') as s:
+        for timestamp in signal:
+            print(timestamp, file=s)
+    with open(out_timestamp_fn[1], 'w') as i:
+        for timestamp in idler:
+            print(timestamp, file=i)
+
+
 class Simulator:
 
     def __init__(self, yaml_fn, pr=1):
@@ -27,14 +96,17 @@ class Simulator:
         self.timestamps_signal = []
         self.timestamps_idler = []
 
-        self.max_counts = 0
-        self.histo = None
-        self.dtime = None
-        self.bins = None
-        self.accidentals = None
-        self.coincidences = None
+        self.max_counts = 0         # count result from the cross-correlation
+        self.car = None             # coincidence-to-accidental ratio
+        self.cps = None             # coincidences per second
+        self.aps = None             # accidentals per second
+        self.histo = None           # unbinned data for the cross-correlation histogram
+        self.dtime = None           # binned data for the cross-correlation histogram
+        self.bins = None            # bins for the cross-correlation histogram
+        self.accidentals = None     # array of the accidental timestamps
+        self.coincidences = None    # array of the coincidence timestamps
 
-    def run(self):
+    def generate_timestamps(self, file_names=None):
         # generate pseudo timestamps following an exponential distribution
         n = self.total_time * self.lambd                  # total number of events
 
@@ -61,12 +133,12 @@ class Simulator:
 
         # generate dark counts
         for i in range(math.floor(n * self.dark_count_rate / self.lambd)):
-            self.timestamps_signal.append(math.floor(random.random() * self.total_time))
-            self.timestamps_idler.append(math.floor(random.random() * self.total_time))
+            self.timestamps_signal.append(math.floor(random.random() * self.total_time * 1e12))
+            self.timestamps_idler.append(math.floor(random.random() * self.total_time * 1e12))
         self.timestamps_signal.sort()
         self.timestamps_idler.sort()
 
-        # deadtime
+        # dead time
         index = 0
         while index < len(self.timestamps_signal) - 1:
             if self.timestamps_signal[index + 1] - self.timestamps_signal[index] < self.dead_time:
@@ -80,28 +152,46 @@ class Simulator:
             else:
                 index += 1
 
-        # store timestamps in a text file
-        with open('timestamps_signal.txt', 'w') as s:
-            for timestamp in self.timestamps_signal:
-                print(timestamp, file=s)
-        with open('timestamps_idler.txt', 'w') as i:
-            for timestamp in self.timestamps_idler:
-                print(timestamp, file=i)
+        # if file names are provided, store timestamps in text files
+        if file_names is not None:
+            with open(file_names[0], 'w') as s:
+                for timestamp in self.timestamps_signal:
+                    print(timestamp, file=s)
+            with open(file_names[1], 'w') as i:
+                for timestamp in self.timestamps_idler:
+                    print(timestamp, file=i)
 
-        # ___________________________________________________________________
+    def cross_corr(self, timestamp_fn=None):
+
+        if timestamp_fn is None:
+            # if no timestamp file names are provided, use the class variables
+            signal = self.timestamps_signal
+            idler = self.timestamps_idler
+        else:
+            # load timestamps from the files
+            signal = []
+            idler = []
+            with open(timestamp_fn[0]) as s:
+                for line in s:
+                    signal.append(int(line))
+
+            with open(timestamp_fn[1]) as i:
+                for line in i:
+                    idler.append(int(line))
+
         # count coincidences
-        if len(self.timestamps_signal) > 0 and len(self.timestamps_idler) > 0:
+        if len(signal) > 0 and len(idler) > 0:
             range_ps = 200000           # checks the time difference for (-range_ps/2, range_ps/2)
 
-            s_floor = np.int64(np.floor(np.array(self.timestamps_signal) / (range_ps / 2)))
-            i_floor = np.int64(np.floor(np.array(self.timestamps_idler) / (range_ps / 2)))
+            s_floor = np.int64(np.floor(np.array(signal) / (range_ps / 2)))
+            i_floor = np.int64(np.floor(np.array(idler) / (range_ps / 2)))
             coinc0 = np.intersect1d(s_floor, i_floor, return_indices=True)
             coinc1 = np.intersect1d(s_floor, i_floor - 1, return_indices=True)
             coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
             coinc = np.hstack((coinc0, coinc1, coinc2))
 
-            s_time = np.array(self.timestamps_signal)[coinc[1]]
-            i_time = np.array(self.timestamps_idler)[coinc[2]]
+            s_time = np.array(signal)[coinc[1]]
+            i_time = np.array(idler)[coinc[2]]
             self.dtime = s_time - i_time
 
             # iterate over coincidence_interval, find max of the max(histo)'s
@@ -134,8 +224,13 @@ class Simulator:
             self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
             self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
 
-            # print(self.histo)
-            # print(i)
+            if np.mean(self.accidentals) > 0:
+                self.car = self.max_counts / np.mean(self.accidentals)
+
+            t_signal = (signal[-1] - signal[0]) / 1e12
+            t_idler = (idler[-1] - idler[0]) / 1e12
+            self.cps = 2 * sum(self.coincidences) / (t_signal + t_idler)
+            self.aps = 2 * sum(self.accidentals) / (t_signal + t_idler)
 
     def plot_cross_corr(self, path=None):
         plt.hist(self.dtime, self.bins)
@@ -147,28 +242,16 @@ class Simulator:
             plt.savefig(path, dpi=1000, bbox_inches='tight')
         plt.show()
 
-    def calc_car(self):
-        if np.mean(self.accidentals) > 0:
-            return self.max_counts/np.mean(self.accidentals)
-
-    def calc_coincidences_per_sec(self):
-        # total collection time for the signal and idler (in seconds)
-        t_signal = (self.timestamps_signal[-1] - self.timestamps_signal[0])/1e12
-        t_idler = (self.timestamps_idler[-1] - self.timestamps_idler[0])/1e12
-        return 2 * sum(self.coincidences) / (t_signal + t_idler)
-
-    def calc_accidentals_per_sec(self):
-        # total collection time for the signal and idler (in seconds)
-        t_signal = (self.timestamps_signal[-1] - self.timestamps_signal[0]) / 1e12
-        t_idler = (self.timestamps_idler[-1] - self.timestamps_idler[0]) / 1e12
-        return 2 * sum(self.accidentals) / (t_signal + t_idler)
-
 
 if __name__ == "__main__":
+    # modify_timestamps(('timestamps_signal.txt', 'timestamps_idler.txt'),
+    #                   ('timestamps_signal1.txt', 'timestamps_idler1.txt'), 'config1.yaml')
+
     a = Simulator('config.yaml')
-    a.run()
+    a.generate_timestamps(('timestamps_signal.txt', 'timestamps_idler.txt'))
+    a.cross_corr()
     print('Coincidences: ' + str(a.max_counts))
-    print('Coincidence-to-Accidental Ratio: ' + str(a.calc_car()))
-    print('Coincidences per second: ' + str(a.calc_coincidences_per_sec()))
-    print('Accidentals per second: ' + str(a.calc_accidentals_per_sec()))
+    print('Coincidence-to-Accidental Ratio: ' + str(a.car))
+    print('Coincidences per second: ' + str(a.cps))
+    print('Accidentals per second: ' + str(a.aps))
     a.plot_cross_corr('plots\\cross_correlation_plot.png')
