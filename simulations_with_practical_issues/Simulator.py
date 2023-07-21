@@ -6,6 +6,14 @@ import yaml
 
 
 def modify_timestamps(in_timestamp_fn, out_timestamp_fn, yaml_fn):
+    """
+    Takes in a set of timetags stored in text files and simulates extending the fiber cable. Adds loss, jitter, dark
+    counts/straylight, and dead time, and saves the resulting timetags in two new text files.
+
+    :param (str, str) in_timestamp_fn: file paths of the input signal and idler timestamps
+    :param (str, str) out_timestamp_fn: file paths of the output signal and idler timestamps
+    :param str yaml_fn: file path for the config file associated with the fiber cable extension
+    """
 
     # load in timestamps
     signal = []
@@ -77,6 +85,17 @@ def modify_timestamps(in_timestamp_fn, out_timestamp_fn, yaml_fn):
 class Simulator:
 
     def __init__(self, yaml_fn, pr=1):
+        """
+        This class simulates counting pairs of entangled photons, factoring in imperfect entanglement states from the
+        photon source, optical loss and dispersion in fibers, as well as dark counts and timing jitter in single photon
+        detectors. The specifications should be stored in the YAML configuration file.
+
+        It can also simulate a measurement if a probability is provided. The default value is 1.
+
+        :param str yaml_fn: path for the config file
+        :param float pr: probability associated with the 00 state
+        """
+
         self.yaml_fn = yaml_fn
         y_fn = open(self.yaml_fn, 'r')
         self.dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
@@ -107,6 +126,14 @@ class Simulator:
         self.coincidences = None    # array of the coincidence timestamps
 
     def generate_timestamps(self, file_names=None):
+        """
+        Generates timestamps based on the specifications in the config fil, and stores them in self.timestamps_signal
+        and self.timestamps_idler. If a set of file_names is provided, also the timestamps are saved in a pair of text
+        files.
+
+        :param (str, str) file_names: optional file paths to store the timestamps in
+        """
+
         # generate pseudo timestamps following an exponential distribution
         n = self.total_time * self.lambd                  # total number of events
 
@@ -162,9 +189,16 @@ class Simulator:
                     print(timestamp, file=i)
 
     def cross_corr(self, timestamp_fn=None):
+        """
+        Performs a cross-correlation between the timestamp data sets, and gives an estimation of the coincidence and
+        accidental rate (self.cps and self.aps), as well as the coincidence to accidental ratio (self.car). If no
+        timestamp file names are provided, the self.timestamps_signal and self.timestamps_idler class variables are used
+        instead.
+
+        :param (str, str) timestamp_fn: optional file paths of the signal and idler timestamps to be cross-correlated
+        """
 
         if timestamp_fn is None:
-            # if no timestamp file names are provided, use the class variables
             signal = self.timestamps_signal
             idler = self.timestamps_idler
         else:
@@ -207,32 +241,36 @@ class Simulator:
                 else:
                     break
 
-            # TODO: fix CAR calculation for edge cases (index out of bounds)
-            # ___________________________________________________________________
             # seperate coincidences and accidentals
             epsilon = 10             # the difference in means allowed amoung the accidentals
             max_i = np.argmax(self.histo)
             i = 0
             interval = 5
-            prev = np.split(self.histo, [max_i - interval, max_i])[1]
-            curr = np.split(self.histo, [max_i - 1 - interval, max_i - 1])[1]
-            while abs(np.mean(prev) - np.mean(curr)) > epsilon:
-                i += 1
-                prev = np.split(self.histo, [max_i - interval - i, max_i - i])[1]
-                curr = np.split(self.histo, [max_i - 1 - interval - i, max_i - 1 - i])[1]
+            if max_i - interval > 0:
+                prev = np.split(self.histo, [max_i - interval, max_i])[1]
+                curr = np.split(self.histo, [max_i - 1 - interval, max_i - 1])[1]
+                while abs(np.mean(prev) - np.mean(curr)) > epsilon:
+                    i += 1
+                    prev = np.split(self.histo, [max_i - interval - i, max_i - i])[1]
+                    curr = np.split(self.histo, [max_i - 1 - interval - i, max_i - 1 - i])[1]
 
-            self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
-            self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
+                self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
+                self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
 
-            if np.mean(self.accidentals) > 0:
-                self.car = self.max_counts / np.mean(self.accidentals)
+                if np.mean(self.accidentals) > 0:
+                    self.car = self.max_counts / np.mean(self.accidentals)
 
-            t_signal = (signal[-1] - signal[0]) / 1e12
-            t_idler = (idler[-1] - idler[0]) / 1e12
-            self.cps = 2 * sum(self.coincidences) / (t_signal + t_idler)
-            self.aps = 2 * sum(self.accidentals) / (t_signal + t_idler)
+                t_signal = (signal[-1] - signal[0]) / 1e12
+                t_idler = (idler[-1] - idler[0]) / 1e12
+                self.cps = 2 * sum(self.coincidences) / (t_signal + t_idler)
+                self.aps = 2 * sum(self.accidentals) / (t_signal + t_idler)
 
     def plot_cross_corr(self, path=None):
+        """
+        Plots the cross-correlation histogram. If a path is provided, the figure is saved there.
+
+        :param str path: optional file path to save the plot in
+        """
         plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
@@ -255,3 +293,19 @@ if __name__ == "__main__":
     print('Coincidences per second: ' + str(a.cps))
     print('Accidentals per second: ' + str(a.aps))
     a.plot_cross_corr('plots\\cross_correlation_plot.png')
+
+
+#                ////==   ===\\\
+#          _//---__ 0      0   \\
+#         //////// //_ {_} \\\ \\\\\
+#       ///// / / ///// \\\\\\ \\\ \\\
+#         __|  ______       ----\   \\
+#        / ___/__-___ \==__    |
+#       /_________-- \--__     |
+#         |                   |
+#         |                   |
+#          |                  |
+#            |               |
+#               |           |
+#                  |     |
+#                __===|| |=__

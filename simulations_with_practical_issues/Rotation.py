@@ -13,6 +13,16 @@ states = ('H', 'D', 'V', 'A')
 class Rotation:
 
     def __init__(self, yaml_fn, entangled_state, rotations=200):
+        """
+        This class simulates a polarization entanglement distribution experiment that involves measuring pairs of
+        entangled photons at different polarization basis states using two polarizers. The specifications should be
+        stored in the YAML configuration file. The default number of rotation steps for the polarizer is 200.
+
+        :param str yaml_fn: file path for the config file
+        :param entangled_state: quantum state of the photons
+        :type entangled_state: (complex, complex, complex, complex)
+        :param int rotations: number of rotation steps for the polarizer
+        """
         self.yaml_fn = yaml_fn
         y_fn = open(self.yaml_fn, 'r')
         self.dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
@@ -20,14 +30,29 @@ class Rotation:
 
         self.lambd = self.dicty['lambd']
         self.total_time = self.dicty['total_time']
+        self.lag = self.dicty['lag']
+        self.loss_signal = self.dicty['loss_signal']
+        self.loss_idler = self.dicty['loss_idler']
+        self.dark_count_rate = self.dicty['dark_count_rate']
+        self.dead_time = self.dicty['dead_time']
+        self.jitter_fwhm = self.dicty['jitter_fwhm']
+        self.coincidence_interval = self.dicty['coincidence_interval']
         self.n = self.lambd * self.total_time
+
         self.entangled_state = entangled_state
         self.rotations = rotations
-        self.x_val = []
-        self.y_val = [[], [], [], []]
+        self.x_val = []                     # polarization angle
+        self.y_val = [[], [], [], []]       # counts
+        self.visibility = []
         self.state_latex = ''
 
     def run(self):
+        """
+        Runs the polarization entanglement distribution experiment. The signal polarizer is kept in different settings
+        (H, V, D, A) while the other polarizer is rotated from 0 to 4π. The Qiskit library is used to calculate the
+        expected photon pair rate at the different bases, and the Simulator class is used to account for practical
+        issues.
+        """
         qc = QuantumCircuit(2, 2)
 
         for i in range(4):
@@ -56,19 +81,20 @@ class Rotation:
                 if i == 0:
                     self.x_val.append(delta)
 
-    def calc_visibility(self):
-
-        visibility = []
-        for i in range(4):
+            # calculate visibility
             i_max = max(self.y_val[i])
             i_min = min(self.y_val[i])
-            visibility.append((i_max - i_min) / (i_max + i_min))
-            # print(states[i] + ': ' + str(visibility[i]))
-
-        return visibility
+            self.visibility.append((i_max - i_min) / (i_max + i_min))
 
     def plot_correlation(self, path=None, plot_title=None):
+        """
+        Plots the polarization correlation for each of the 4 bases (H, V, D, A). If a path is provided, the figure is
+        saved there. The default plot title is the entangled state. If a specific plot title is provided, the plot is
+        titled that instead.
 
+        :param str path: optional file path to save the plot in
+        :param str plot_title: optional custom plot title
+        """
         fig, ax = plt.subplots()
 
         for i in range(4):
@@ -78,7 +104,6 @@ class Rotation:
         ax.set_ylabel('Counts')
         ax.set_ylim(0 - 40, self.n + 40)
 
-        # default is to put the entangled state as the title
         if plot_title is None:
             ax.set_title('$' + self.state_latex + '$')
         else:
@@ -93,11 +118,11 @@ class Rotation:
 
 if __name__ == '__main__':
     d = .25
-    state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
+    state = (1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2))
     # default title expands the complex number into floats
     # we set the title to keep it in its exponential form
     a = Rotation('config.yaml', state, rotations=50)
     a.run()
-    print(a.calc_visibility())
+    print(a.visibility)
     titl = '$\\frac{\sqrt{2}}{2} |00\\rangle+e^{' + str(d) + 'i}|11\\rangle$'
     a.plot_correlation('plots\\polarization_correlation.png', titl)

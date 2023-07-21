@@ -10,7 +10,14 @@ states = ['H', 'D', 'V', 'A']
 
 
 def plot_g2_darkcounts(yaml_fn, dc, colors=None):
+    """
+    Plots semi-transparent cross-correlation histograms with varying dark count rates overtop of each other, and saves
+    the plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
 
+    :param str yaml_fn: file path for the config file
+    :param list[int] dc: list of varying dark count rates for the histograms (counts/s)
+    :param list[str] colors: optional list of colors for the histograms (counts/s)
+    """
     with alive_bar(len(dc), force_tty=True) as bar:
 
         sim = Simulator(yaml_fn)
@@ -53,7 +60,14 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None):
 
 
 def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
+    """
+    Plots semi-transparent cross-correlation histograms with varying dead times overtop of each other, and saves the
+    plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
 
+    :param str yaml_fn: file path for the config file
+    :param list[int] deadtime: list of varying dead times for the histograms (ps)
+    :param list[str] colors: optional list of colors for the histograms
+    """
     with alive_bar(len(deadtime), force_tty=True) as bar:
 
         max_max = 0
@@ -97,7 +111,17 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
 
 
 def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
+    """
+    Plots semi-transparent cross-correlation histograms with varying jitter full width at half maximums overtop of each
+    other, and saves the plot with the parameters in the title. There is an option to include the FWHM calculations and
+    annotations on the cross-correlation histograms. If specific colors are not provided, the default Tableau colors are
+    used.
 
+    :param str yaml_fn: file path for the config file
+    :param list[int] jitter: list of varying jitter FWHMs for the histograms (ps)
+    :param list[str] colors: optional list of colors for the histograms
+    :param bool fwhm: if the FWHMs will be annotated on the plot
+    """
     with alive_bar(len(jitter), force_tty=True) as bar:
 
         fig, ax = plt.subplots()
@@ -163,7 +187,14 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
 
 
 def plot_g2_loss(yaml_fn, loss, colors=None):
+    """
+    Plots semi-transparent cross-correlation histograms with varying optical loss overtop of each other, and saves the
+    plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
 
+    :param str yaml_fn: file path for the config file
+    :param list[float] loss: list of varying optical loss for the histograms (dB)
+    :param list[str] colors: optional list of colors for the histograms
+    """
     with alive_bar(len(loss), force_tty=True) as bar:
 
         max_max = 0
@@ -211,7 +242,15 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
 
 
 def plot_car_darkcounts(yaml_fn, start, stop, num_points):
+    """
+    Plots the coincidence to accidental ratio (CAR) versus the dark count rate, and saves the plot with the parameters
+    in the title.
 
+    :param str yaml_fn: file path for the config file
+    :param int start: starting dark count rate (counts/s)
+    :param int stop: stopping dark count rate (counts/s)
+    :param int num_points: number of points to plot
+    """
     x_val = np.linspace(start, stop, num_points)
     y_val = []
 
@@ -244,7 +283,15 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
 
 
 def plot_car_deadtime(yaml_fn, start, stop, num_points):
+    """
+    Plots the coincidence to accidental ratio (CAR) versus the dead time, and saves the plot with the parameters in the
+    title.
 
+    :param str yaml_fn: file path for the config file
+    :param int start: starting dead time (ps)
+    :param int stop: stopping dead time (ps)
+    :param int num_points: number of points to plot
+    """
     x_val = np.linspace(start, stop, num_points)
     y_val = []
 
@@ -276,7 +323,15 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points):
 
 
 def plot_car_jitter(yaml_fn, start, stop, num_points):
+    """
+    Plots the coincidence to accidental ratio (CAR) versus the jitter full width at half maximum, and saves the plot
+    with the parameters in the title.
 
+    :param str yaml_fn: file path for the config file
+    :param int start: starting jitter fwhm (ps)
+    :param int stop: stopping jitter fwhm (ps)
+    :param int num_points: number of points to plot
+    """
     x_val = np.linspace(start, stop, num_points)
     y_val = []
 
@@ -308,7 +363,15 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
 
 
 def plot_car_loss(yaml_fn, start, stop, num_points):
+    """
+    Plots the coincidence to accidental ratio (CAR) versus the optical loss, and saves the plot with the parameters in
+    the title.
 
+    :param str yaml_fn: file path for the config file
+    :param float start: starting loss (dB)
+    :param float stop: stopping loss (dB)
+    :param int num_points: number of points to plot
+    """
     x_val = 10**(np.linspace(start, stop, num_points)/10)
     y_val = []
 
@@ -341,7 +404,18 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
 
 
 def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotations=50):
+    """
+    Plots the entanglement visibility versus the dark count rate for each of the 4 bases (H, V, D, A), and saves the
+    plot with the parameters in the title. The default number of rotation steps is 50.
 
+    :param str yaml_fn: file path for the config file
+    :param state: quantum state of the photons
+    :type state: (complex, complex, complex, complex)
+    :param int start: starting dark count rate (counts/s)
+    :param int stop: stopping dark count rate (counts/s)
+    :param int num_points: number of points to plot
+    :param int rotations: number of rotation steps for the polarizer
+    """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
@@ -351,9 +425,8 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
             sim = Rotation(yaml_fn, state, rotations)
             sim.dark_count_rate = dc
             sim.run()
-            visibility = sim.calc_visibility()
             for i in range(4):
-                y_val[i].append(visibility[i])
+                y_val[i].append(sim.visibility[i])
             bar()
 
     for i in range(4):
@@ -377,7 +450,18 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
 
 
 def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=50):
+    """
+    Plots the entanglement visibility versus the dead time for each of the 4 bases (H, V, D, A), and saves the plot with
+    the parameters in the title. The default number of rotation steps is 50.
 
+    :param str yaml_fn: file path for the config file
+    :param state: quantum state of the photons
+    :type state: (complex, complex, complex, complex)
+    :param int start: starting dead time (ps)
+    :param int stop: stopping dead time (ps)
+    :param int num_points: number of points to plot
+    :param int rotations: number of rotation steps for the polarizer
+    """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
@@ -387,9 +471,8 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=
             sim = Rotation(yaml_fn, state, rotations)
             sim.dead_time = deadtime
             sim.run()
-            visibility = sim.calc_visibility()
             for i in range(4):
-                y_val[i].append(visibility[i])
+                y_val[i].append(sim.visibility[i])
             bar()
 
     for i in range(4):
@@ -413,7 +496,18 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=
 
 
 def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50):
+    """
+    Plots the entanglement visibility versus the jitter full width at half maximum for each of the 4 bases (H, V, D, A),
+    and saves the plot with the parameters in the title. The default number of rotation steps is 50.
 
+    :param str yaml_fn: file path for the config file
+    :param state: quantum state of the photons
+    :type state: (complex, complex, complex, complex)
+    :param int start: starting jitter fwhm (ps)
+    :param int stop: stopping jitter fwhm (ps)
+    :param int num_points: number of points to plot
+    :param int rotations: number of rotation steps for the polarizer
+    """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
@@ -423,9 +517,8 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50
             sim = Rotation(yaml_fn, state, rotations)
             sim.jitter = jitter
             sim.run()
-            visibility = sim.calc_visibility()
             for i in range(4):
-                y_val[i].append(visibility[i])
+                y_val[i].append(sim.visibility[i])
             bar()
 
     for i in range(4):
@@ -449,7 +542,18 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50
 
 
 def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50):
+    """
+    Plots the entanglement visibility versus the optical loss for each of the 4 bases (H, V, D, A), and saves the plot
+    with the parameters in the title. The default number of rotation steps is 50.
 
+    :param str yaml_fn: file path for the config file
+    :param state: quantum state of the photons
+    :type state: (complex, complex, complex, complex)
+    :param float start: starting loss (dB)
+    :param float stop: stopping loss (dB)
+    :param int num_points: number of points to plot
+    :param int rotations: number of rotation steps for the polarizer
+    """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
@@ -461,9 +565,8 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50):
             sim.loss_signal = loss_pr
             sim.loss_idler = loss_pr
             sim.run()
-            visibility = sim.calc_visibility()
             for i in range(4):
-                y_val[i].append(visibility[i])
+                y_val[i].append(sim.visibility[i])
             bar()
 
     for i in range(4):
@@ -487,7 +590,16 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50):
 
 
 def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50):
+    """
+    Plots the entanglement visibility versus the phase difference in the entangled state for each of the 4 bases
+    (H, V, D, A), and saves the plot with the parameters in the title. The default number of rotation steps is 50.
 
+    :param str yaml_fn: file path for the config file
+    :param float start: starting phase difference (radians)
+    :param float stop: stopping phase difference (radians)
+    :param int num_points: number of points to plot
+    :param int rotations: number of rotation steps for the polarizer
+    """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
 
@@ -497,9 +609,8 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50):
             entangled_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * delta) / math.sqrt(2)]
             sim = Rotation(yaml_fn, entangled_state, rotations)
             sim.run()
-            visibility = sim.calc_visibility()
             for i in range(4):
-                y_val[i].append(visibility[i])
+                y_val[i].append(sim.visibility[i])
             bar()
 
     for i in range(4):
@@ -524,12 +635,10 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50):
 
 
 if __name__ == '__main__':
-    d = .25
-    qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
 
     # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
-    plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 50000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
+    # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 50000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
     # plot_g2_loss('config.yaml', [-10, -6, -3, -1, 0], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
     # plot_car_darkcounts('config.yaml', 0, 10000, 256)
@@ -537,7 +646,10 @@ if __name__ == '__main__':
     # plot_car_jitter('config.yaml', 0, 8000, 4096)
     # plot_car_loss('config.yaml', 0, -30, 256)
 
-    # plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 8)
+    d = .25
+    qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
+
+    plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 4)
     # plot_visibility_deadtime('config.yaml', qubit_state, 0, 1000000, 8)
     # plot_visibility_jitter('config.yaml', qubit_state, 0, 100000, 8)
     # plot_visibility_loss('config.yaml', qubit_state, 0, -30, 8)
