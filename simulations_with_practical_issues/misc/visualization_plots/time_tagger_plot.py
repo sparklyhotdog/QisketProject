@@ -111,4 +111,3 @@ dt.stem(timestamps, [1]*len(timestamps))
 
 plt.savefig('time_tagger_plot.png', dpi=1000)
 plt.show()
-
