@@ -250,29 +250,17 @@ class Simulator:
                 else:
                     break
 
-            # seperate coincidences and accidentals
-            epsilon = 10             # the difference in means allowed amoung the accidentals
-            max_i = np.argmax(self.histo)
-            i = 0
-            interval = 5
-            if max_i - interval > 0:
-                prev = np.split(self.histo, [max_i - interval, max_i])[1]
-                curr = np.split(self.histo, [max_i - 1 - interval, max_i - 1])[1]
-                while abs(np.mean(prev) - np.mean(curr)) > epsilon:
-                    i += 1
-                    prev = np.split(self.histo, [max_i - interval - i, max_i - i])[1]
-                    curr = np.split(self.histo, [max_i - 1 - interval - i, max_i - 1 - i])[1]
+            # calculates the mean of the interval [acc_1, acc_2)
+            acc_1 = 0
+            acc_2 = math.floor(0.1 * len(self.histo))
+            self.accidentals = np.split(self.histo, [acc_1, acc_2])[1]
 
-                self.accidentals = np.delete(self.histo, range(max_i - i, max_i + i + 1))
-                self.coincidences = np.split(self.histo, [max_i - i, max_i + i + 1])[1]
+            if np.mean(self.accidentals) > 0:
+                self.car = self.max_counts / np.mean(self.accidentals)
 
-                if np.mean(self.accidentals) > 0:
-                    self.car = self.max_counts / np.mean(self.accidentals)
-
-                t_signal = (signal[-1] - signal[0]) / 1e12
-                t_idler = (idler[-1] - idler[0]) / 1e12
-                self.cps = 2 * sum(self.coincidences) / (t_signal + t_idler)
-                self.aps = 2 * sum(self.accidentals) / (t_signal + t_idler)
+            time = signal[-1] - signal[0] + idler[-1] - idler[0]
+            self.cps = 2e12 * self.max_counts / time
+            self.aps = 2e12 * np.mean(self.accidentals) / time
 
     def plot_cross_corr(self, path=None):
         """

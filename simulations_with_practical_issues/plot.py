@@ -202,7 +202,7 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
         for i in range(len(loss)):
 
             sim = Simulator(yaml_fn)
-            loss_pr = 10 ** (loss[i]/10)
+            loss_pr = 1 - 10 ** (-loss[i]/10)
             sim.loss_signal = loss_pr
             sim.loss_idler = loss_pr
             sim.generate_timestamps()
@@ -372,7 +372,7 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
     :param float stop: stopping loss (dB)
     :param int num_points: number of points to plot
     """
-    x_val = 10**(np.linspace(start, stop, num_points)/10)
+    x_val = 1 - 10**(-np.linspace(start, stop, num_points)/10)
     y_val = []
 
     with alive_bar(num_points, force_tty=True) as bar:
@@ -554,23 +554,22 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50):
     :param int num_points: number of points to plot
     :param int rotations: number of rotation steps for the polarizer
     """
-    x_val = np.linspace(start, stop, num_points)
+    x_val = 1 - 10**(-np.linspace(start, stop, num_points)/10)
     y_val = [[], [], [], []]
 
     with alive_bar(num_points, force_tty=True) as bar:
 
         for loss in x_val:
             sim = Rotation(yaml_fn, state, rotations)
-            loss_pr = 10 ** (loss / 10)
-            sim.loss_signal = loss_pr
-            sim.loss_idler = loss_pr
+            sim.loss_signal = loss
+            sim.loss_idler = loss
             sim.run()
             for i in range(4):
                 y_val[i].append(sim.visibility[i])
             bar()
 
     for i in range(4):
-        plt.plot(x_val, y_val[i], label=states[i])
+        plt.plot(np.linspace(start, stop, num_points), y_val[i], label=states[i])
     plt.legend()
     plt.xlabel('Optical Loss (dB)')
     plt.ylabel('Visibility')
@@ -649,12 +648,12 @@ if __name__ == '__main__':
     # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 50000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
-    # plot_g2_loss('config.yaml', [-10, -6, -3, -1, 0], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
+    plot_g2_loss('config.yaml', [0, 1, 3, 6, 10], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
     # plot_car_darkcounts('config.yaml', 0, 10000, 256)
     # plot_car_deadtime('config.yaml', 0, 1000000, 64)
     # plot_car_jitter('config.yaml', 0, 8000, 4096)
-    # plot_car_loss('config.yaml', 0, -30, 256)
+    # plot_car_loss('config.yaml', 0, 30, 256)
 
     d = .25
     qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
@@ -662,5 +661,5 @@ if __name__ == '__main__':
     # plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 4)
     # plot_visibility_deadtime('config.yaml', qubit_state, 0, 1000000, 8)
     # plot_visibility_jitter('config.yaml', qubit_state, 0, 100000, 8)
-    # plot_visibility_loss('config.yaml', qubit_state, 0, -30, 8)
-    plot_visibility_phasediff('config.yaml', 0, 4*math.pi, 64)
+    # plot_visibility_loss('config.yaml', qubit_state, 0, 30, 8)
+    # plot_visibility_phasediff('config.yaml', 0, 4*math.pi, 64)
