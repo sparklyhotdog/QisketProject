@@ -11,12 +11,15 @@ states = ('H', 'D', 'V', 'A')
 
 
 class Rotation:
+    """
+    This class simulates a polarization entanglement distribution experiment that involves measuring pairs of entangled
+    photons at different polarization basis states using two polarizers. The specifications should be stored in a YAML
+    configuration file.
+    """
 
     def __init__(self, yaml_fn, entangled_state, rotations=200):
         """
-        This class simulates a polarization entanglement distribution experiment that involves measuring pairs of
-        entangled photons at different polarization basis states using two polarizers. The specifications should be
-        stored in the YAML configuration file. The default number of rotation steps for the polarizer is 200.
+        Constructor for the Rotation class.
 
         :param str yaml_fn: file path for the config file
         :param entangled_state: quantum state of the photons
@@ -48,10 +51,11 @@ class Rotation:
 
     def run(self):
         """
-        Runs the polarization entanglement distribution experiment. The signal polarizer is kept in different settings
-        (H, V, D, A) while the other polarizer is rotated from 0 to 4π. The Qiskit library is used to calculate the
-        expected photon pair rate at the different bases, and the Simulator class is used to account for practical
-        issues.
+        Runs the polarization entanglement distribution experiment.
+
+        The signal polarizer is kept in different settings (H, V, D, A) while the other polarizer is rotated from 0 to
+        4π. The Qiskit library is used to calculate the expected photon pair rate at the different bases, and the
+        Simulator class is used to account for optical loss, jitter, dark counts, and dead time.
         """
         qc = QuantumCircuit(2, 2)
 
@@ -88,9 +92,10 @@ class Rotation:
 
     def plot_correlation(self, path=None, plot_title=None):
         """
-        Plots the polarization correlation for each of the 4 bases (H, V, D, A). If a path is provided, the figure is
-        saved there. The default plot title is the entangled state. If a specific plot title is provided, the plot is
-        titled that instead.
+        Plots the polarization correlation for each of the 4 bases (H, V, D, A).
+
+        If a path is provided, the figure is saved there. The default plot title is the entangled state. If a specific
+        plot title is provided, the plot is titled that instead.
 
         :param str path: optional file path to save the plot in
         :param str plot_title: optional custom plot title

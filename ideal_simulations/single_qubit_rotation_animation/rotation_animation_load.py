@@ -3,7 +3,13 @@ from qiskit import *
 from math import pi, sqrt
 import pickle
 
-# loads graphing data in x_val and y_val
+'''
+Loads the graphing data in the x_val and y_val files for the animation.
+
+The animation is the graph of the counts versus the polarizer angle, while the state shifts from the horizontal state to 
+the left circular state. Run rotation_animation_run.py to run the animation.
+'''
+
 state_H = [1, 0]
 state_V = [0, 1]
 state_P = [1/sqrt(2), 1/sqrt(2)]

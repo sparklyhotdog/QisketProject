@@ -7,8 +7,10 @@ import yaml
 
 def modify_timestamps(in_timestamp_fn, out_timestamp_fn, yaml_fn):
     """
-    Takes in a set of timetags stored in text files and simulates extending the fiber cable. Adds loss, jitter, dark
-    counts/straylight, and dead time, and saves the resulting timetags in two new text files.
+    Modifies a set of timestamps to simulate extending the fiber cable.
+
+    This function takes in a set of timetags stored in text files and simulates extending the fiber cable by adding
+    loss, jitter, dark counts/straylight, and dead time. It saves the resulting timetags in two new text files.
 
     :param (str, str) in_timestamp_fn: file paths of the input signal and idler timestamps
     :param (str, str) out_timestamp_fn: file paths of the output signal and idler timestamps
@@ -83,14 +85,17 @@ def modify_timestamps(in_timestamp_fn, out_timestamp_fn, yaml_fn):
 
 
 class Simulator:
+    """
+    This class simulates counting pairs of entangled photons, factoring in imperfect entanglement states from the photon
+    source, optical loss and dispersion in fibers, as well as dark counts and timing jitter in single photon detectors.
+    The specifications should be stored in a YAML configuration file.
+
+    It can also simulate a measurement if a probability is provided.
+    """
 
     def __init__(self, yaml_fn, pr=1):
         """
-        This class simulates counting pairs of entangled photons, factoring in imperfect entanglement states from the
-        photon source, optical loss and dispersion in fibers, as well as dark counts and timing jitter in single photon
-        detectors. The specifications should be stored in the YAML configuration file.
-
-        It can also simulate a measurement if a probability is provided. The default value is 1.
+        The constructor for the Simulator class.
 
         :param str yaml_fn: path for the config file
         :param float pr: probability associated with the 00 state
@@ -127,9 +132,11 @@ class Simulator:
 
     def generate_timestamps(self, file_names=None):
         """
-        Generates timestamps based on the specifications in the config fil, and stores them in self.timestamps_signal
-        and self.timestamps_idler. If a set of file_names is provided, also the timestamps are saved in a pair of text
-        files.
+        Generates timestamps based on the specifications in the config file.
+
+        This method factors in optical loss, jitter, dark counts, and dead time as specified in the config file when
+        generating the timestamps, and stores them in self.timestamps_signal and self.timestamps_idler. If a set of
+        file names is provided, then timestamps are also saved in a pair of text files.
 
         :param (str, str) file_names: optional file paths to store the timestamps in
         """
@@ -190,10 +197,12 @@ class Simulator:
 
     def cross_corr(self, timestamp_fn=None):
         """
-        Performs a cross-correlation between the timestamp data sets, and gives an estimation of the coincidence and
-        accidental rate (self.cps and self.aps), as well as the coincidence to accidental ratio (self.car). If no
-        timestamp file names are provided, the self.timestamps_signal and self.timestamps_idler class variables are used
-        instead.
+        Cross-correlates the timestamp data sets.
+
+        This method performs a cross-correlation between the timestamp data sets, and gives an estimation of the
+        coincidence and accidental rate (self.cps and self.aps), as well as the coincidence to accidental ratio
+        (self.car). If no timestamp file names are provided, the self.timestamps_signal and self.timestamps_idler class
+        variables are used instead.
 
         :param (str, str) timestamp_fn: optional file paths of the signal and idler timestamps to be cross-correlated
         """
@@ -267,15 +276,17 @@ class Simulator:
 
     def plot_cross_corr(self, path=None):
         """
-        Plots the cross-correlation histogram. If a path is provided, the figure is saved there.
+        Plots the cross-correlation histogram.
+
+        This method displays the cross-correlation histogram. If a path is provided, the figure is also saved there.
 
         :param str path: optional file path to save the plot in
         """
         plt.hist(self.dtime, self.bins)
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
-        # plt.yscale('log')
-        plt.ylim(0.5, 10 ** math.ceil(math.log10(self.max_counts)))
+        plt.yscale('log')
+        plt.ylim(0.5, 10 ** math.ceil(math.log10(self.max_counts) + 1))
         if path is not None:
             plt.savefig(path, dpi=1000, bbox_inches='tight')
         plt.show()

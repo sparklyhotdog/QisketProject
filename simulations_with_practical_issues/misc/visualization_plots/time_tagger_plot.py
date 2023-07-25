@@ -6,6 +6,13 @@ import matplotlib.pyplot as plt
 import copy
 import matplotlib.markers
 
+'''
+Displays a plot showing the effects of loss, jitter, dark counts, and dead time.
+
+This script generates a small number of timestamps with exaggerated parameters, and plots them in a makeshift stem plot.
+The plot is then displayed and saved in a png file.
+'''
+
 lambd = 100000              # average count rate (100k counts/second)
 n = 10                      # total number of events (1 mil)
 optical_loss = 0.3          # probability of not being detected for the signal photons
@@ -51,7 +58,7 @@ while index < len(timestamps) - 1:
     else:
         index += 1
 
-
+# _______________________________________________________
 # plotting
 x_lim_l = original_timestamps[0] - 1000000
 x_lim_r = original_timestamps[-1] + 1000000

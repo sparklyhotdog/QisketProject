@@ -5,6 +5,10 @@ import math
 from scipy import stats
 import statsmodels.api as sm
 
+'''
+Verifies that the number of generated timestamps in a fixed interval follows a Poisson distribution with a QQ plot.
+'''
+
 # lambd = average count rate (100k counts/second)
 lambd = 100000
 

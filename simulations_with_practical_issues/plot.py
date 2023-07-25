@@ -620,6 +620,16 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50):
     plt.ylabel('Visibility')
     plt.ylim(-0.01, 1.01)
 
+    num_ticks = math.floor((stop + 0.001)/math.pi)
+    ticks = [0]
+    labels = ['0']
+
+    for i in range(1, num_ticks):
+        ticks.append(i * math.pi)
+        labels.append(str(i) + 'π')
+
+    plt.xticks(ticks, labels)
+
     title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
             'λ=' + str(sim.lambd) + ',' + \
             '𝜏=' + str(sim.lag) + ',' + \
@@ -649,8 +659,8 @@ if __name__ == '__main__':
     d = .25
     qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
 
-    plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 4)
+    # plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 4)
     # plot_visibility_deadtime('config.yaml', qubit_state, 0, 1000000, 8)
     # plot_visibility_jitter('config.yaml', qubit_state, 0, 100000, 8)
     # plot_visibility_loss('config.yaml', qubit_state, 0, -30, 8)
-    # plot_visibility_phasediff('config.yaml', 0, 2*math.pi, 64)
+    plot_visibility_phasediff('config.yaml', 0, 4*math.pi, 64)
