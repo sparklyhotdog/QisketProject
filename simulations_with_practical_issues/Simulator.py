@@ -93,12 +93,13 @@ class Simulator:
     It can also simulate a measurement if a probability is provided.
     """
 
-    def __init__(self, yaml_fn, pr=1):
+    def __init__(self, yaml_fn, pr=1, range_ps=200000):
         """
         The constructor for the Simulator class.
 
         :param str yaml_fn: path for the config file
         :param float pr: probability associated with the 00 state
+        :param int range_ps: range for time delays checked in the cross-correlation (ps)
         """
 
         self.yaml_fn = yaml_fn
@@ -107,6 +108,7 @@ class Simulator:
         y_fn.close()
 
         self.pr = pr
+        self.range_ps = range_ps
         self.lambd = self.dicty['lambd']
         self.total_time = self.dicty['total_time']
         self.lag = self.dicty['lag']
@@ -124,11 +126,9 @@ class Simulator:
         self.car = None             # coincidence-to-accidental ratio
         self.cps = None             # coincidences per second
         self.aps = None             # accidentals per second
-        self.histo = None           # unbinned data for the cross-correlation histogram
-        self.dtime = None           # binned data for the cross-correlation histogram
+        self.histo = None           # binned data for the cross-correlation histogram
+        self.dtime = None           # unbinned data for the cross-correlation histogram
         self.bins = None            # bins for the cross-correlation histogram
-        self.accidentals = None     # array of the accidental timestamps
-        self.coincidences = None    # array of the coincidence timestamps
 
     def generate_timestamps(self, file_names=None):
         """
@@ -201,8 +201,8 @@ class Simulator:
 
         This method performs a cross-correlation between the timestamp data sets, and gives an estimation of the
         coincidence and accidental rate (self.cps and self.aps), as well as the coincidence to accidental ratio
-        (self.car). If no timestamp file names are provided, the self.timestamps_signal and self.timestamps_idler class
-        variables are used instead.
+        (self.car). It checks the time delay in the interval (-self.range_ps/2, self.range_ps/2). If no timestamp file
+        names are provided, the self.timestamps_signal and self.timestamps_idler class variables are used instead.
 
         :param (str, str) timestamp_fn: optional file paths of the signal and idler timestamps to be cross-correlated
         """
@@ -224,10 +224,9 @@ class Simulator:
 
         # count coincidences
         if len(signal) > 0 and len(idler) > 0:
-            range_ps = 200000           # checks the time difference for (-range_ps/2, range_ps/2)
 
-            s_floor = np.int64(np.floor(np.array(signal) / (range_ps / 2)))
-            i_floor = np.int64(np.floor(np.array(idler) / (range_ps / 2)))
+            s_floor = np.int64(np.floor(np.array(signal) / (self.range_ps / 2)))
+            i_floor = np.int64(np.floor(np.array(idler) / (self.range_ps / 2)))
             coinc0 = np.intersect1d(s_floor, i_floor, return_indices=True)
             coinc1 = np.intersect1d(s_floor, i_floor - 1, return_indices=True)
             coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
@@ -240,7 +239,7 @@ class Simulator:
             # iterate over coincidence_interval, find max of the max(histo)'s
             num_steps = 2           # the number of dt's checked for the max
             for dt in np.arange(0, self.coincidence_interval, self.coincidence_interval/num_steps):
-                bins = np.arange(-range_ps/2 + dt, range_ps/2 + self.coincidence_interval, self.coincidence_interval)
+                bins = np.arange(-self.range_ps/2 + dt, self.range_ps/2 + self.coincidence_interval, self.coincidence_interval)
                 histo = np.histogram(self.dtime, bins)[0]
                 curr_count = max(histo)
                 if curr_count > self.max_counts:
@@ -250,17 +249,17 @@ class Simulator:
                 else:
                     break
 
-            # calculates the mean of the interval [acc_1, acc_2)
-            acc_1 = 0
-            acc_2 = math.floor(0.1 * len(self.histo))
-            self.accidentals = np.split(self.histo, [acc_1, acc_2])[1]
+            if self.histo is not None:
+                # calculates the mean of the interval [acc_1, acc_2)
+                acc_1 = 0
+                acc_2 = math.floor(0.1 * len(self.histo))
+                accidentals = np.split(self.histo, [acc_1, acc_2])[1]
 
-            if np.mean(self.accidentals) > 0:
-                self.car = self.max_counts / np.mean(self.accidentals)
+                if np.mean(accidentals) > 0:
+                    self.car = self.max_counts / np.mean(accidentals)
 
-            time = signal[-1] - signal[0] + idler[-1] - idler[0]
-            self.cps = 2e12 * self.max_counts / time
-            self.aps = 2e12 * np.mean(self.accidentals) / time
+                self.cps = self.max_counts / self.total_time
+                self.aps = (coinc.shape[1] - self.max_counts) / self.total_time
 
     def plot_cross_corr(self, path=None):
         """
@@ -274,7 +273,7 @@ class Simulator:
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
         plt.yscale('log')
-        plt.ylim(0.5, 10 ** math.ceil(math.log10(self.max_counts) + 1))
+        plt.ylim(0.5, 10 ** math.ceil(math.log10(self.max_counts) + 0.5))
         if path is not None:
             plt.savefig(path, dpi=1000, bbox_inches='tight')
         plt.show()

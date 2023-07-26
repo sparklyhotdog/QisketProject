@@ -44,7 +44,7 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None):
     plt.ylabel('Counts')
     plt.legend(title='Dark counts per second')
     plt.yscale('log')
-    plt.ylim(0.5, 10**math.ceil(math.log10(max_max)))
+    plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
 
     title = 'plots\\g2\\g2_vs_darkcounts\\' + \
             'λ=' + str(sim.lambd) + ',' + \
@@ -95,7 +95,7 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
     plt.ylabel('Counts')
     plt.legend(title='Dead time (ps)')
     plt.yscale('log')
-    plt.ylim(0.5, 10**math.ceil(math.log10(sim.max_counts)))
+    plt.ylim(0.5, 10**math.ceil(math.log10(sim.max_counts) + 0.5))
 
     title = 'plots\\g2\\g2_vs_deadtime\\' + \
             'λ=' + str(sim.lambd) + ',' + \
@@ -154,13 +154,17 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
                     l_lim = sim.bins[l_lim_i + 1]
                     r_lim = sim.bins[r_lim_i]
 
-                    ax.annotate('',
-                                xy=(l_lim - 400, half_max), xycoords='data',
-                                xytext=(r_lim + 400, half_max), textcoords='data',
-                                arrowprops=dict(arrowstyle="<->",
-                                                connectionstyle="arc3", color=colors[i], lw=1),
-                                )
-                    plt.text(r_lim, half_max, str(r_lim - l_lim), color=colors[i])
+                    # this is to exclude any fwhm annotations that don't fit in the default figure dimensions
+                    # in plt.savefig(), bbox_inches='tight' so that the y label isn't cut off, but this means that it
+                    # also adjusts the figure size to include any extreme annotations
+                    if r_lim - l_lim < 40000:
+                        # the 400 padding is for the 0 jitter arrow. If there is no padding, the arrow collapses on
+                        # itself and looks like ><. In the default figure size, it looks like the arrow is touching the
+                        # sides with the padding.
+                        ax.annotate('', xy=(l_lim - 400, half_max), xycoords='data',
+                                    xytext=(r_lim + 400, half_max), textcoords='data',
+                                    arrowprops=dict(arrowstyle="<->", connectionstyle="arc3", color=colors[i], lw=1))
+                        plt.text(r_lim, half_max, str(r_lim - l_lim), color=colors[i])
             bar()
 
     plt.xlabel('Time difference (ps)')
@@ -226,7 +230,7 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
     plt.xlim(-10000, 10000)
     plt.legend(title='Optical Loss (dB)')
     plt.yscale('log')
-    plt.ylim(0.5, 10**math.ceil(math.log10(max_max)))
+    plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
 
     title = 'plots\\g2\\g2_vs_loss\\' + \
             'λ=' + str(sim.lambd) + ',' + \
@@ -256,9 +260,8 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
 
     with alive_bar(num_points, force_tty=True) as bar:
 
-        sim = Simulator(yaml_fn)
-
         for dc in x_val:
+            sim = Simulator(yaml_fn)
             sim.dark_count_rate = dc
             sim.generate_timestamps()
             sim.cross_corr()
@@ -339,7 +342,7 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
 
         for jitter in x_val:
             sim = Simulator(yaml_fn)
-            sim.jitter = jitter
+            sim.jitter_fwhm = jitter
             sim.generate_timestamps()
             sim.cross_corr()
             y_val.append(sim.car)
@@ -648,16 +651,15 @@ if __name__ == '__main__':
     # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 50000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
-    plot_g2_loss('config.yaml', [0, 1, 3, 6, 10], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
+    # plot_g2_loss('config.yaml', [0, 1, 3, 6, 10], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
-    # plot_car_darkcounts('config.yaml', 0, 10000, 256)
+    # plot_car_darkcounts('config.yaml', 0, 1000000, 64)
     # plot_car_deadtime('config.yaml', 0, 1000000, 64)
-    # plot_car_jitter('config.yaml', 0, 8000, 4096)
-    # plot_car_loss('config.yaml', 0, 30, 256)
+    # plot_car_jitter('config.yaml', 0, 10000, 256)
+    plot_car_loss('config.yaml', 0, 30, 256)
 
     d = .25
     qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
-
     # plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 4)
     # plot_visibility_deadtime('config.yaml', qubit_state, 0, 1000000, 8)
     # plot_visibility_jitter('config.yaml', qubit_state, 0, 100000, 8)
