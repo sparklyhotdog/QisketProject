@@ -9,7 +9,7 @@ from alive_progress import alive_bar
 states = ['H', 'D', 'V', 'A']
 
 
-def plot_g2_darkcounts(yaml_fn, dc, colors=None):
+def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
     """
     Plots semi-transparent cross-correlation histograms with varying dark count rates overtop of each other, and saves
     the plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
@@ -17,6 +17,7 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None):
     :param str yaml_fn: file path for the config file
     :param list[int] dc: list of varying dark count rates for the histograms (counts/s)
     :param list[str] colors: optional list of colors for the histograms (counts/s)
+    :param bool savefig: if the plot should be saved in a file
     """
     with alive_bar(len(dc), force_tty=True) as bar:
 
@@ -46,20 +47,21 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None):
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
 
-    title = 'plots\\g2\\g2_vs_darkcounts\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\g2\\g2_vs_darkcounts\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
 
-    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
+def plot_g2_deadtime(yaml_fn, deadtime, colors=None, savefig=True):
     """
     Plots semi-transparent cross-correlation histograms with varying dead times overtop of each other, and saves the
     plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
@@ -67,6 +69,7 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
     :param str yaml_fn: file path for the config file
     :param list[int] deadtime: list of varying dead times for the histograms (ps)
     :param list[str] colors: optional list of colors for the histograms
+    :param bool savefig: if the plot should be saved in a file
     """
     with alive_bar(len(deadtime), force_tty=True) as bar:
 
@@ -97,20 +100,21 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None):
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(sim.max_counts) + 0.5))
 
-    title = 'plots\\g2\\g2_vs_deadtime\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\g2\\g2_vs_deadtime\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
 
-    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
+def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
     """
     Plots semi-transparent cross-correlation histograms with varying jitter full width at half maximums overtop of each
     other, and saves the plot with the parameters in the title. There is an option to include the FWHM calculations and
@@ -121,6 +125,7 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
     :param list[int] jitter: list of varying jitter FWHMs for the histograms (ps)
     :param list[str] colors: optional list of colors for the histograms
     :param bool fwhm: if the FWHMs will be annotated on the plot
+    :param bool savefig: if the plot should be saved in a file
     """
     with alive_bar(len(jitter), force_tty=True) as bar:
 
@@ -177,20 +182,21 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False):
     else:
         fwhm_str = ''
 
-    title = 'plots\\g2\\g2_vs_jitter\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'ci=' + str(sim.coincidence_interval) + fwhm_str + '.png'
+    if savefig:
+        title = 'plots\\g2\\g2_vs_jitter\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'ci=' + str(sim.coincidence_interval) + fwhm_str + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
 
-    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_g2_loss(yaml_fn, loss, colors=None):
+def plot_g2_loss(yaml_fn, loss, colors=None, savefig=True):
     """
     Plots semi-transparent cross-correlation histograms with varying optical loss overtop of each other, and saves the
     plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
@@ -198,6 +204,7 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
     :param str yaml_fn: file path for the config file
     :param list[float] loss: list of varying optical loss for the histograms (dB)
     :param list[str] colors: optional list of colors for the histograms
+    :param bool savefig: if the plot should be saved in a file
     """
     with alive_bar(len(loss), force_tty=True) as bar:
 
@@ -232,20 +239,21 @@ def plot_g2_loss(yaml_fn, loss, colors=None):
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
 
-    title = 'plots\\g2\\g2_vs_loss\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\g2\\g2_vs_loss\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
 
-    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_car_darkcounts(yaml_fn, start, stop, num_points):
+def plot_car_darkcounts(yaml_fn, start, stop, num_points, savefig=True):
     """
     Plots the coincidence to accidental ratio (CAR) versus the dark count rate, and saves the plot with the parameters
     in the title.
@@ -254,6 +262,7 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
     :param int start: starting dark count rate (counts/s)
     :param int stop: stopping dark count rate (counts/s)
     :param int num_points: number of points to plot
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = np.linspace(start, stop, num_points)
     y_val = []
@@ -272,20 +281,21 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points):
     plt.xlabel('Dark Count Rate (counts/second)')
     plt.ylabel('Coincidence-to-Accidental Rate')
 
-    title = 'plots\\car\\car_vs_darkcounts\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\car\\car_vs_darkcounts\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
 
-    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_car_deadtime(yaml_fn, start, stop, num_points):
+def plot_car_deadtime(yaml_fn, start, stop, num_points, savefig=True):
     """
     Plots the coincidence to accidental ratio (CAR) versus the dead time, and saves the plot with the parameters in the
     title.
@@ -294,6 +304,7 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points):
     :param int start: starting dead time (ps)
     :param int stop: stopping dead time (ps)
     :param int num_points: number of points to plot
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = np.linspace(start, stop, num_points)
     y_val = []
@@ -312,20 +323,21 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points):
     plt.xlabel('Dead Time (ps)')
     plt.ylabel('Coincidence-to-Accidental Rate')
 
-    title = 'plots\\car\\car_vs_deadtime\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\car\\car_vs_deadtime\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
 
-    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_car_jitter(yaml_fn, start, stop, num_points):
+def plot_car_jitter(yaml_fn, start, stop, num_points, savefig=True):
     """
     Plots the coincidence to accidental ratio (CAR) versus the jitter full width at half maximum, and saves the plot
     with the parameters in the title.
@@ -334,6 +346,7 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
     :param int start: starting jitter fwhm (ps)
     :param int stop: stopping jitter fwhm (ps)
     :param int num_points: number of points to plot
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = np.linspace(start, stop, num_points)
     y_val = []
@@ -352,20 +365,21 @@ def plot_car_jitter(yaml_fn, start, stop, num_points):
     plt.xlabel('Jitter FWHM (ps)')
     plt.ylabel('Coincidence-to-Accidental Rate')
 
-    title = 'plots\\car\\car_vs_jitter\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\car\\car_vs_jitter\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
 
-    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_car_loss(yaml_fn, start, stop, num_points):
+def plot_car_loss(yaml_fn, start, stop, num_points, savefig=True):
     """
     Plots the coincidence to accidental ratio (CAR) versus the optical loss, and saves the plot with the parameters in
     the title.
@@ -374,6 +388,7 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
     :param float start: starting loss (dB)
     :param float stop: stopping loss (dB)
     :param int num_points: number of points to plot
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = 1 - 10**(-np.linspace(start, stop, num_points)/10)
     y_val = []
@@ -393,20 +408,21 @@ def plot_car_loss(yaml_fn, start, stop, num_points):
     plt.xlabel('Optical Loss (dB)')
     plt.ylabel('Coincidence-to-Accidental Rate')
 
-    title = 'plots\\car\\car_vs_loss\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\car\\car_vs_loss\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
 
-    plt.savefig(title, dpi=1000, bbox_inches='tight')
     plt.show()
 
 
-def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotations=50):
+def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
     """
     Plots the entanglement visibility versus the dark count rate for each of the 4 bases (H, V, D, A), and saves the
     plot with the parameters in the title. The default number of rotation steps is 50.
@@ -418,6 +434,7 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
     :param int stop: stopping dark count rate (counts/s)
     :param int num_points: number of points to plot
     :param int rotations: number of rotation steps for the polarizer
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
@@ -439,20 +456,21 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
     plt.ylabel('Visibility')
     plt.ylim(-0.01, 1.01)
 
-    title = 'plots\\visibility\\visibility_vs_darkcounts\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\visibility\\visibility_vs_darkcounts\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000)
 
-    plt.savefig(title, dpi=1000)
     plt.show()
 
 
-def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=50):
+def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
     """
     Plots the entanglement visibility versus the dead time for each of the 4 bases (H, V, D, A), and saves the plot with
     the parameters in the title. The default number of rotation steps is 50.
@@ -464,6 +482,7 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=
     :param int stop: stopping dead time (ps)
     :param int num_points: number of points to plot
     :param int rotations: number of rotation steps for the polarizer
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
@@ -485,20 +504,21 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=
     plt.ylabel('Visibility')
     plt.ylim(-0.01, 1.01)
 
-    title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000)
 
-    plt.savefig(title, dpi=1000)
     plt.show()
 
 
-def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50):
+def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
     """
     Plots the entanglement visibility versus the jitter full width at half maximum for each of the 4 bases (H, V, D, A),
     and saves the plot with the parameters in the title. The default number of rotation steps is 50.
@@ -510,6 +530,7 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50
     :param int stop: stopping jitter fwhm (ps)
     :param int num_points: number of points to plot
     :param int rotations: number of rotation steps for the polarizer
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
@@ -531,20 +552,21 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50
     plt.ylabel('Visibility')
     plt.ylim(-0.01, 1.01)
 
-    title = 'plots\\visibility\\visibility_vs_jitter\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\visibility\\visibility_vs_jitter\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000)
 
-    plt.savefig(title, dpi=1000)
     plt.show()
 
 
-def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50):
+def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
     """
     Plots the entanglement visibility versus the optical loss for each of the 4 bases (H, V, D, A), and saves the plot
     with the parameters in the title. The default number of rotation steps is 50.
@@ -556,6 +578,7 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50):
     :param float stop: stopping loss (dB)
     :param int num_points: number of points to plot
     :param int rotations: number of rotation steps for the polarizer
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = 1 - 10**(-np.linspace(start, stop, num_points)/10)
     y_val = [[], [], [], []]
@@ -578,20 +601,21 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50):
     plt.ylabel('Visibility')
     plt.ylim(-0.01, 1.01)
 
-    title = 'plots\\visibility\\visibility_vs_loss\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\visibility\\visibility_vs_loss\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000)
 
-    plt.savefig(title, dpi=1000)
     plt.show()
 
 
-def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50):
+def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, savefig=True):
     """
     Plots the entanglement visibility versus the phase difference in the entangled state for each of the 4 bases
     (H, V, D, A), and saves the plot with the parameters in the title. The default number of rotation steps is 50.
@@ -601,6 +625,7 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50):
     :param float stop: stopping phase difference (radians)
     :param int num_points: number of points to plot
     :param int rotations: number of rotation steps for the polarizer
+    :param bool savefig: if the plot should be saved in a file
     """
     x_val = np.linspace(start, stop, num_points)
     y_val = [[], [], [], []]
@@ -632,17 +657,18 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50):
 
     plt.xticks(ticks, labels)
 
-    title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
-            'λ=' + str(sim.lambd) + ',' + \
-            '𝜏=' + str(sim.lag) + ',' + \
-            str(sim.total_time) + 's,' + \
-            'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-            'dc=' + str(sim.dark_count_rate) + ',' + \
-            'dt=' + str(sim.dead_time) + ',' + \
-            'j=' + str(sim.jitter_fwhm) + ',' \
-            'ci=' + str(sim.coincidence_interval) + '.png'
+    if savefig:
+        title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coincidence_interval) + '.png'
+        plt.savefig(title, dpi=1000)
 
-    plt.savefig(title, dpi=1000)
     plt.show()
 
 
