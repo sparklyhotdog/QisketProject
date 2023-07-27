@@ -114,10 +114,11 @@ class Simulator:
         self.lag = self.dicty['lag']
         self.loss_signal = self.dicty['loss_signal']
         self.loss_idler = self.dicty['loss_idler']
-        self.dark_count_rate = self.dicty['dark_count_rate']
+        self.dark_counts = self.dicty['dark_counts']
+        self.ambient_light = self.dicty['ambient_light']
         self.dead_time = self.dicty['dead_time']
         self.jitter_fwhm = self.dicty['jitter_fwhm']
-        self.coincidence_interval = self.dicty['coincidence_interval']
+        self.coinc_interval = self.dicty['coinc_interval']
 
         self.timestamps_signal = []
         self.timestamps_idler = []
@@ -141,11 +142,9 @@ class Simulator:
         :param (str, str) file_names: optional file paths to store the timestamps in
         """
 
-        # generate pseudo timestamps following an exponential distribution
-        n = self.total_time * self.lambd                  # total number of events
-
+        # generate pseudo timestamps for entangled pairs following an exponential distribution
         t = 0
-        for i in range(math.floor(n)):
+        for i in range(math.floor(self.total_time * self.lambd)):
             dt = math.floor(random.expovariate(self.lambd) * 1e12)
             t += dt
             if random.random() < self.pr:
@@ -165,8 +164,16 @@ class Simulator:
             for i in range(len(self.timestamps_idler)):
                 self.timestamps_idler[i] += math.floor(random.gauss(0, sigma))
 
+        # generate ambient light
+        for i in range(math.floor(self.ambient_light * self.total_time)):
+            # factor in loss
+            if random.random() > self.loss_signal:
+                self.timestamps_signal.append(math.floor(random.random() * self.total_time * 1e12))
+            if random.random() > self.loss_idler:
+                self.timestamps_idler.append(math.floor(random.random() * self.total_time * 1e12))
+
         # generate dark counts
-        for i in range(math.floor(n * self.dark_count_rate / self.lambd)):
+        for i in range(math.floor(self.dark_counts * self.total_time)):
             self.timestamps_signal.append(math.floor(random.random() * self.total_time * 1e12))
             self.timestamps_idler.append(math.floor(random.random() * self.total_time * 1e12))
         self.timestamps_signal.sort()
@@ -238,8 +245,8 @@ class Simulator:
 
             # iterate over coincidence_interval, find max of the max(histo)'s
             num_steps = 2           # the number of dt's checked for the max
-            for dt in np.arange(0, self.coincidence_interval, self.coincidence_interval/num_steps):
-                bins = np.arange(-self.range_ps/2 + dt, self.range_ps/2 + self.coincidence_interval, self.coincidence_interval)
+            for dt in np.arange(0, self.coinc_interval, self.coinc_interval / num_steps):
+                bins = np.arange(-self.range_ps / 2 + dt, self.range_ps / 2 + self.coinc_interval, self.coinc_interval)
                 histo = np.histogram(self.dtime, bins)[0]
                 curr_count = max(histo)
                 if curr_count > self.max_counts:
@@ -290,9 +297,11 @@ if __name__ == "__main__":
     print('Coincidence-to-Accidental Ratio: ' + str(a.car))
     print('Coincidences per second: ' + str(a.cps))
     print('Accidentals per second: ' + str(a.aps))
-    a.plot_cross_corr('plots\\cross_correlation_plot.png')
+    # a.plot_cross_corr('plots\\cross_correlation_plot.png')
+    a.plot_cross_corr()
 
 
+#
 #                ////==   ===\\\
 #          _//---__ 0      0   \\
 #         //////// //_ {_} \\\ \\\\\

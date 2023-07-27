@@ -9,10 +9,65 @@ from alive_progress import alive_bar
 states = ['H', 'D', 'V', 'A']
 
 
+def plot_g2_ambient(yaml_fn, ambient, colors=None, savefig=True):
+    """
+    Plots semi-transparent cross-correlation histograms with varying ambient light count rates overtop of each other. By
+    default, the plot is saved with the parameters in the title. If savefig=False, the plot will be shown but not saved.
+    If specific colors are not provided, the default Tableau colors are used.
+
+    :param str yaml_fn: file path for the config file
+    :param list[int] ambient: list of varying ambient light rates for the histograms (counts/s)
+    :param list[str] colors: optional list of colors for the histograms (counts/s)
+    :param bool savefig: if the plot should be saved in a file
+    """
+    with alive_bar(len(ambient), force_tty=True) as bar:
+
+        sim = Simulator(yaml_fn)
+        max_max = 0
+
+        for i in range(len(ambient)):
+
+            sim.ambient_light = ambient[i]
+            sim.generate_timestamps()
+            sim.cross_corr()
+            if sim.bins is not None:
+
+                if colors is None:
+                    plt.hist(sim.dtime, sim.bins, alpha=0.5, label=ambient[i])
+                else:
+                    plt.hist(sim.dtime, sim.bins, alpha=0.5, label=ambient[i], color=colors[i])
+
+                if sim.max_counts > max_max:
+                    max_max = sim.max_counts
+
+            bar()
+
+    plt.xlabel('Time difference (ps)')
+    plt.ylabel('Counts')
+    plt.legend(title='Ambient light counts per second')
+    plt.yscale('log')
+    plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
+
+    if savefig:
+        title = 'plots\\g2\\g2_vs_ambientlight\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coinc_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
+
+    plt.show()
+
+
 def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
     """
-    Plots semi-transparent cross-correlation histograms with varying dark count rates overtop of each other, and saves
-    the plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
+    Plots semi-transparent cross-correlation histograms with varying dark count rates overtop of each other. By default,
+    the plot is saved with the parameters in the title. If savefig=False, the plot will be shown but not saved. If
+    specific colors are not provided, the default Tableau colors are used.
 
     :param str yaml_fn: file path for the config file
     :param list[int] dc: list of varying dark count rates for the histograms (counts/s)
@@ -26,7 +81,7 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
 
         for i in range(len(dc)):
 
-            sim.dark_count_rate = dc[i]
+            sim.dark_counts = dc[i]
             sim.generate_timestamps()
             sim.cross_corr()
             if sim.bins is not None:
@@ -53,9 +108,10 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
     plt.show()
@@ -63,8 +119,9 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
 
 def plot_g2_deadtime(yaml_fn, deadtime, colors=None, savefig=True):
     """
-    Plots semi-transparent cross-correlation histograms with varying dead times overtop of each other, and saves the
-    plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
+    Plots semi-transparent cross-correlation histograms with varying dead times overtop of each other. By default, the
+    plot is saved with the parameters in the title. If savefig=False, the plot will be shown but not saved. If specific
+    colors are not provided, the default Tableau colors are used.
 
     :param str yaml_fn: file path for the config file
     :param list[int] deadtime: list of varying dead times for the histograms (ps)
@@ -106,9 +163,10 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None, savefig=True):
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
     plt.show()
@@ -117,9 +175,9 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None, savefig=True):
 def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
     """
     Plots semi-transparent cross-correlation histograms with varying jitter full width at half maximums overtop of each
-    other, and saves the plot with the parameters in the title. There is an option to include the FWHM calculations and
-    annotations on the cross-correlation histograms. If specific colors are not provided, the default Tableau colors are
-    used.
+    other. By default, the plot is saved with the parameters in the title. If savefig=False, the plot will be shown but
+    not saved. There is an option to include the FWHM calculations and annotations on the cross-correlation histograms.
+    If specific colors are not provided, the default Tableau colors are used.
 
     :param str yaml_fn: file path for the config file
     :param list[int] jitter: list of varying jitter FWHMs for the histograms (ps)
@@ -188,9 +246,10 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'ci=' + str(sim.coincidence_interval) + fwhm_str + '.png'
+                'ci=' + str(sim.coinc_interval) + fwhm_str + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
     plt.show()
@@ -198,8 +257,9 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
 
 def plot_g2_loss(yaml_fn, loss, colors=None, savefig=True):
     """
-    Plots semi-transparent cross-correlation histograms with varying optical loss overtop of each other, and saves the
-    plot with the parameters in the title. If specific colors are not provided, the default Tableau colors are used.
+    Plots semi-transparent cross-correlation histograms with varying optical loss overtop of each other. By default, the
+    plot is saved with the parameters in the title. If savefig=False, the plot will be shown but not saved. If specific
+    colors are not provided, the default Tableau colors are used.
 
     :param str yaml_fn: file path for the config file
     :param list[float] loss: list of varying optical loss for the histograms (dB)
@@ -244,10 +304,54 @@ def plot_g2_loss(yaml_fn, loss, colors=None, savefig=True):
                 'λ=' + str(sim.lambd) + ',' + \
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
+        plt.savefig(title, dpi=1000, bbox_inches='tight')
+
+    plt.show()
+
+
+def plot_car_ambient(yaml_fn, start, stop, num_points, savefig=True):
+    """
+    Plots the coincidence to accidental ratio (CAR) versus the ambient light count rate. By default, the plot is saved
+    with the parameters in the title. If savefig=False, the plot will be shown but not saved.
+
+    :param str yaml_fn: file path for the config file
+    :param int start: starting dark count rate (counts/s)
+    :param int stop: stopping dark count rate (counts/s)
+    :param int num_points: number of points to plot
+    :param bool savefig: if the plot should be saved in a file
+    """
+    x_val = np.linspace(start, stop, num_points)
+    y_val = []
+
+    with alive_bar(num_points, force_tty=True) as bar:
+
+        for ambient in x_val:
+            sim = Simulator(yaml_fn)
+            sim.ambient_light = ambient
+            sim.generate_timestamps()
+            sim.cross_corr()
+            y_val.append(sim.car)
+            bar()
+
+    plt.plot(x_val, y_val)
+    plt.xlabel('Ambient Light Count Rate (counts/second)')
+    plt.ylabel('Coincidence-to-Accidental Rate')
+
+    if savefig:
+        title = 'plots\\car\\car_vs_ambientlight\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
     plt.show()
@@ -255,8 +359,8 @@ def plot_g2_loss(yaml_fn, loss, colors=None, savefig=True):
 
 def plot_car_darkcounts(yaml_fn, start, stop, num_points, savefig=True):
     """
-    Plots the coincidence to accidental ratio (CAR) versus the dark count rate, and saves the plot with the parameters
-    in the title.
+    Plots the coincidence to accidental ratio (CAR) versus the dark count rate. By default, the plot is saved with the
+    parameters in the title. If savefig=False, the plot will be shown but not saved.
 
     :param str yaml_fn: file path for the config file
     :param int start: starting dark count rate (counts/s)
@@ -271,7 +375,7 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points, savefig=True):
 
         for dc in x_val:
             sim = Simulator(yaml_fn)
-            sim.dark_count_rate = dc
+            sim.dark_counts = dc
             sim.generate_timestamps()
             sim.cross_corr()
             y_val.append(sim.car)
@@ -287,9 +391,10 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points, savefig=True):
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
     plt.show()
@@ -297,8 +402,8 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points, savefig=True):
 
 def plot_car_deadtime(yaml_fn, start, stop, num_points, savefig=True):
     """
-    Plots the coincidence to accidental ratio (CAR) versus the dead time, and saves the plot with the parameters in the
-    title.
+    Plots the coincidence to accidental ratio (CAR) versus the dead time. By default, the plot is saved with the
+    parameters in the title. If savefig=False, the plot will be shown but not saved.
 
     :param str yaml_fn: file path for the config file
     :param int start: starting dead time (ps)
@@ -329,9 +434,10 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points, savefig=True):
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
     plt.show()
@@ -339,8 +445,8 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points, savefig=True):
 
 def plot_car_jitter(yaml_fn, start, stop, num_points, savefig=True):
     """
-    Plots the coincidence to accidental ratio (CAR) versus the jitter full width at half maximum, and saves the plot
-    with the parameters in the title.
+    Plots the coincidence to accidental ratio (CAR) versus the jitter full width at half maximum. By default, the plot
+    is saved with the parameters in the title. If savefig=False, the plot will be shown but not saved.
 
     :param str yaml_fn: file path for the config file
     :param int start: starting jitter fwhm (ps)
@@ -371,9 +477,10 @@ def plot_car_jitter(yaml_fn, start, stop, num_points, savefig=True):
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
     plt.show()
@@ -381,8 +488,8 @@ def plot_car_jitter(yaml_fn, start, stop, num_points, savefig=True):
 
 def plot_car_loss(yaml_fn, start, stop, num_points, savefig=True):
     """
-    Plots the coincidence to accidental ratio (CAR) versus the optical loss, and saves the plot with the parameters in
-    the title.
+    Plots the coincidence to accidental ratio (CAR) versus the optical loss. By default, the plot is saved with the
+    parameters in the title. If savefig=False, the plot will be shown but not saved.
 
     :param str yaml_fn: file path for the config file
     :param float start: starting loss (dB)
@@ -413,19 +520,69 @@ def plot_car_loss(yaml_fn, start, stop, num_points, savefig=True):
                 'λ=' + str(sim.lambd) + ',' + \
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
+
+    plt.show()
+
+
+def plot_visibility_ambient(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
+    """
+    Plots the entanglement visibility versus the ambient light count rate for each of the 4 bases (H, V, D, A). By
+    default, the plot is saved with the parameters in the title. If savefig=False, the plot will be shown but not saved.
+
+    :param str yaml_fn: file path for the config file
+    :param state: quantum state of the photons
+    :type state: (complex, complex, complex, complex)
+    :param int start: starting dark count rate (counts/s)
+    :param int stop: stopping dark count rate (counts/s)
+    :param int num_points: number of points to plot
+    :param int rotations: number of rotation steps for the polarizer
+    :param bool savefig: if the plot should be saved in a file
+    """
+    x_val = np.linspace(start, stop, num_points)
+    y_val = [[], [], [], []]
+
+    with alive_bar(num_points, force_tty=True) as bar:
+
+        for ambient in x_val:
+            sim = Rotation(yaml_fn, state, rotations)
+            sim.dark_counts = ambient
+            sim.run()
+            for i in range(4):
+                y_val[i].append(sim.visibility[i])
+            bar()
+
+    for i in range(4):
+        plt.plot(x_val, y_val[i], label=states[i])
+    plt.legend()
+    plt.xlabel('Ambient Light Count Rate (counts/second)')
+    plt.ylabel('Visibility')
+    plt.ylim(-0.01, 1.01)
+
+    if savefig:
+        title = 'plots\\visibility\\visibility_vs_ambientlight\\' + \
+                'λ=' + str(sim.lambd) + ',' + \
+                '𝜏=' + str(sim.lag) + ',' + \
+                str(sim.total_time) + 's,' + \
+                'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'dt=' + str(sim.dead_time) + ',' + \
+                'j=' + str(sim.jitter_fwhm) + ',' \
+                                              'ci=' + str(sim.coinc_interval) + '.png'
+        plt.savefig(title, dpi=1000)
 
     plt.show()
 
 
 def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
     """
-    Plots the entanglement visibility versus the dark count rate for each of the 4 bases (H, V, D, A), and saves the
-    plot with the parameters in the title. The default number of rotation steps is 50.
+    Plots the entanglement visibility versus the dark count rate for each of the 4 bases (H, V, D, A). By default, the
+    plot is saved with the parameters in the title. If savefig=False, the plot will be shown but not saved.
 
     :param str yaml_fn: file path for the config file
     :param state: quantum state of the photons
@@ -443,7 +600,7 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
 
         for dc in x_val:
             sim = Rotation(yaml_fn, state, rotations)
-            sim.dark_count_rate = dc
+            sim.dark_counts = dc
             sim.run()
             for i in range(4):
                 y_val[i].append(sim.visibility[i])
@@ -462,9 +619,10 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
     plt.show()
@@ -472,8 +630,8 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
 
 def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
     """
-    Plots the entanglement visibility versus the dead time for each of the 4 bases (H, V, D, A), and saves the plot with
-    the parameters in the title. The default number of rotation steps is 50.
+    Plots the entanglement visibility versus the dead time for each of the 4 bases (H, V, D, A). By default, the plot is
+    saved with the parameters in the title. If savefig=False, the plot will be shown but not saved.
 
     :param str yaml_fn: file path for the config file
     :param state: quantum state of the photons
@@ -510,9 +668,10 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
     plt.show()
@@ -520,8 +679,9 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=
 
 def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
     """
-    Plots the entanglement visibility versus the jitter full width at half maximum for each of the 4 bases (H, V, D, A),
-    and saves the plot with the parameters in the title. The default number of rotation steps is 50.
+    Plots the entanglement visibility versus the jitter full width at half maximum for each of the 4 bases (H, V, D, A).
+    By default, the plot is saved with the parameters in the title. If savefig=False, the plot will be shown but not
+    saved.
 
     :param str yaml_fn: file path for the config file
     :param state: quantum state of the photons
@@ -558,9 +718,10 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
     plt.show()
@@ -568,8 +729,8 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50
 
 def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50, savefig=True):
     """
-    Plots the entanglement visibility versus the optical loss for each of the 4 bases (H, V, D, A), and saves the plot
-    with the parameters in the title. The default number of rotation steps is 50.
+    Plots the entanglement visibility versus the optical loss for each of the 4 bases (H, V, D, A). By default, the plot
+    is saved with the parameters in the title. If savefig=False, the plot will be shown but not saved.
 
     :param str yaml_fn: file path for the config file
     :param state: quantum state of the photons
@@ -606,10 +767,11 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50, 
                 'λ=' + str(sim.lambd) + ',' + \
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
     plt.show()
@@ -618,7 +780,8 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50, 
 def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, savefig=True):
     """
     Plots the entanglement visibility versus the phase difference in the entangled state for each of the 4 bases
-    (H, V, D, A), and saves the plot with the parameters in the title. The default number of rotation steps is 50.
+    (H, V, D, A). By default, the plot is saved with the parameters in the title. If savefig=False, the plot will be
+    shown but not saved.
 
     :param str yaml_fn: file path for the config file
     :param float start: starting phase difference (radians)
@@ -663,10 +826,11 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
                 '𝜏=' + str(sim.lag) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
-                'dc=' + str(sim.dark_count_rate) + ',' + \
+                'dc=' + str(sim.dark_counts) + ',' + \
+                'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
                 'j=' + str(sim.jitter_fwhm) + ',' \
-                'ci=' + str(sim.coincidence_interval) + '.png'
+                'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
     plt.show()
@@ -674,20 +838,31 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
 
 if __name__ == '__main__':
 
+    # plot_g2_ambient('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
-    # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
+    # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'], False)
     # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 50000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
     # plot_g2_loss('config.yaml', [0, 1, 3, 6, 10], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
-    # plot_car_darkcounts('config.yaml', 0, 1000000, 64)
+    # plot_car_ambient('config.yaml', 0, 1000000, 256)
+    plot_car_darkcounts('config.yaml', 0, 1000000, 1024)
     # plot_car_deadtime('config.yaml', 0, 1000000, 64)
     # plot_car_jitter('config.yaml', 0, 10000, 256)
-    plot_car_loss('config.yaml', 0, 30, 256)
+    # plot_car_loss('config.yaml', 0, 30, 256)
 
     d = .25
     qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
+    # plot_visibility_ambient('config.yaml', qubit_state, 0, 1000000, 4)
     # plot_visibility_darkcounts('config.yaml', qubit_state, 0, 1000000, 4)
     # plot_visibility_deadtime('config.yaml', qubit_state, 0, 1000000, 8)
     # plot_visibility_jitter('config.yaml', qubit_state, 0, 100000, 8)
     # plot_visibility_loss('config.yaml', qubit_state, 0, 30, 8)
     # plot_visibility_phasediff('config.yaml', 0, 4*math.pi, 64)
+
+#
+#               _=-
+#         =_   < o \
+#        / o >  \    \
+#       /    )    nn \\
+#      // nn
+#

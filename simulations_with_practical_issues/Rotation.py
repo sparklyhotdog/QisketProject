@@ -36,10 +36,11 @@ class Rotation:
         self.lag = self.dicty['lag']
         self.loss_signal = self.dicty['loss_signal']
         self.loss_idler = self.dicty['loss_idler']
-        self.dark_count_rate = self.dicty['dark_count_rate']
+        self.dark_counts = self.dicty['dark_counts']
+        self.ambient_light = self.dicty['ambient_light']
         self.dead_time = self.dicty['dead_time']
         self.jitter_fwhm = self.dicty['jitter_fwhm']
-        self.coincidence_interval = self.dicty['coincidence_interval']
+        self.coinc_interval = self.dicty['coinc_interval']
         self.n = self.lambd * self.total_time
 
         self.entangled_state = entangled_state
@@ -131,3 +132,11 @@ if __name__ == '__main__':
     print(a.visibility)
     titl = '$\\frac{\sqrt{2}}{2} |00\\rangle+e^{' + str(d) + 'i}|11\\rangle$'
     a.plot_correlation('plots\\polarization_correlation.png', titl)
+
+#
+#       //-/__
+#     <_  o  ==
+#      /      }
+#     |      \|
+#       n n
+#
