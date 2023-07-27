@@ -257,7 +257,7 @@ class Simulator:
                     break
 
             if self.histo is not None:
-                # calculates the mean of the interval [acc_1, acc_2)
+                # calculates the mean of the interval [acc_1, acc_2) for the accidentals
                 acc_1 = 0
                 acc_2 = math.floor(0.1 * len(self.histo))
                 accidentals = np.split(self.histo, [acc_1, acc_2])[1]
