@@ -21,6 +21,9 @@ ambient_light = 50000       # (counts/second)
 deadtime = 3000000          # (picoseconds)
 jitter_fwhm = 1500000       # (picoseconds)
 
+# ___________________________________________________
+# generating timestamps
+
 # (picoseconds)
 timestamps = []
 
@@ -100,6 +103,7 @@ original.stem(original_timestamps, [1]*len(original_timestamps))
 
 al.set_title('After Adding Ambient Light')
 al.stem(original_timestamps, [1]*len(original_timestamps))
+# the added points get pluses
 added_points = copy.deepcopy(ambient_timestamps)
 for x in original_timestamps:
     added_points.remove(x)
@@ -108,6 +112,7 @@ if len(added_points) > 0:
 
 optical_loss.set_title('After Optical Loss')
 optical_loss.stem(optical_loss_timestamps, [1]*len(optical_loss_timestamps))
+# the missing points get crossed out
 missing_points = copy.deepcopy(ambient_timestamps)
 for x in optical_loss_timestamps:
     missing_points.remove(x)
@@ -116,6 +121,7 @@ if len(missing_points) > 0:
 
 jitter.set_title('After Incorporating Jitter')
 for mu in optical_loss_timestamps:
+    # make the normal distribution curve
     x_val = np.linspace(mu - 3*sigma, mu + 3*sigma)
     y_val = math.e ** ((x_val - mu)**2/(-2 * sigma**2))
     jitter.fill_between(x_val, y_val, [0]*len(x_val), color='#a7cef1')
@@ -123,6 +129,7 @@ jitter.stem(jitter_timestamps, [1]*len(jitter_timestamps))
 
 dc.set_title('After Adding Dark Counts')
 dc.stem(jitter_timestamps, [1]*len(jitter_timestamps))
+# the added points get pluses
 added_points = copy.deepcopy(darkcounts_timestamps)
 for x in jitter_timestamps:
     added_points.remove(x)

@@ -33,15 +33,14 @@ class Rotation:
 
         self.lambd = self.dicty['lambd']
         self.total_time = self.dicty['total_time']
-        self.lag = self.dicty['lag']
+        self.delay = self.dicty['delay']
         self.loss_signal = self.dicty['loss_signal']
         self.loss_idler = self.dicty['loss_idler']
         self.dark_counts = self.dicty['dark_counts']
         self.ambient_light = self.dicty['ambient_light']
         self.dead_time = self.dicty['dead_time']
-        self.jitter_fwhm = self.dicty['jitter_fwhm']
+        self.jitter = self.dicty['jitter']
         self.coinc_interval = self.dicty['coinc_interval']
-        self.n = self.lambd * self.total_time
 
         self.entangled_state = entangled_state
         self.rotations = rotations
@@ -81,7 +80,7 @@ class Rotation:
                 sim = Simulator(self.yaml_fn, pr_00)
                 sim.generate_timestamps()
                 sim.cross_corr()
-                self.y_val[i].append(sim.max_counts)
+                self.y_val[i].append(sim.coincidences)
 
                 if i == 0:
                     self.x_val.append(delta)
@@ -108,7 +107,7 @@ class Rotation:
 
         ax.set_xlabel('Polarizer Angle for the 2nd Photon')
         ax.set_ylabel('Counts')
-        ax.set_ylim(0 - 40, self.n + 40)
+        ax.set_ylim(0 - 40, self.lambd * self.total_time + 40)
 
         if plot_title is None:
             ax.set_title('$' + self.state_latex + '$')

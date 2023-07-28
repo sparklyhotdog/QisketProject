@@ -5,26 +5,26 @@ import numpy as np
 import yaml
 
 
-def modify_timestamps(in_timestamp_fn, out_timestamp_fn, yaml_fn):
+def modify_timestamps(in_timestamps, out_timestamps, yaml_fn):
     """
     Modifies a set of timestamps to simulate extending the fiber cable.
 
     This function takes in a set of timetags stored in text files and simulates extending the fiber cable by adding
     loss, jitter, dark counts/straylight, and dead time. It saves the resulting timetags in two new text files.
 
-    :param (str, str) in_timestamp_fn: file paths of the input signal and idler timestamps
-    :param (str, str) out_timestamp_fn: file paths of the output signal and idler timestamps
+    :param (str, str) in_timestamps: file paths of the input signal and idler timestamps
+    :param (str, str) out_timestamps: file paths of the output signal and idler timestamps
     :param str yaml_fn: file path for the config file associated with the fiber cable extension
     """
 
     # load in timestamps
     signal = []
     idler = []
-    with open(in_timestamp_fn[0]) as s:
+    with open(in_timestamps[0]) as s:
         for line in s:
             signal.append(int(line))
 
-    with open(in_timestamp_fn[1]) as i:
+    with open(in_timestamps[1]) as i:
         for line in i:
             idler.append(int(line))
 
@@ -76,10 +76,10 @@ def modify_timestamps(in_timestamp_fn, out_timestamp_fn, yaml_fn):
             index += 1
 
     # store new timestamps in text files
-    with open(out_timestamp_fn[0], 'w') as s:
+    with open(out_timestamps[0], 'w') as s:
         for timestamp in signal:
             print(timestamp, file=s)
-    with open(out_timestamp_fn[1], 'w') as i:
+    with open(out_timestamps[1], 'w') as i:
         for timestamp in idler:
             print(timestamp, file=i)
 
@@ -93,13 +93,12 @@ class Simulator:
     It can also simulate a measurement if a probability is provided.
     """
 
-    def __init__(self, yaml_fn, pr=1, range_ps=200000):
+    def __init__(self, yaml_fn, pr=1):
         """
         The constructor for the Simulator class.
 
         :param str yaml_fn: path for the config file
         :param float pr: probability associated with the 00 state
-        :param int range_ps: range for time delays checked in the cross-correlation (ps)
         """
 
         self.yaml_fn = yaml_fn
@@ -108,22 +107,21 @@ class Simulator:
         y_fn.close()
 
         self.pr = pr
-        self.range_ps = range_ps
         self.lambd = self.dicty['lambd']
         self.total_time = self.dicty['total_time']
-        self.lag = self.dicty['lag']
+        self.delay = self.dicty['delay']
         self.loss_signal = self.dicty['loss_signal']
         self.loss_idler = self.dicty['loss_idler']
         self.dark_counts = self.dicty['dark_counts']
         self.ambient_light = self.dicty['ambient_light']
         self.dead_time = self.dicty['dead_time']
-        self.jitter_fwhm = self.dicty['jitter_fwhm']
+        self.jitter = self.dicty['jitter']
         self.coinc_interval = self.dicty['coinc_interval']
 
         self.timestamps_signal = []
         self.timestamps_idler = []
 
-        self.max_counts = 0         # count result from the cross-correlation
+        self.coincidences = 0         # count result from the cross-correlation
         self.car = None             # coincidence-to-accidental ratio
         self.cps = None             # coincidences per second
         self.aps = None             # accidentals per second
@@ -150,12 +148,12 @@ class Simulator:
             if random.random() < self.pr:
                 # optical loss
                 if random.random() > self.loss_signal:
-                    self.timestamps_signal.append(t + self.lag)
+                    self.timestamps_signal.append(t + self.delay)
                 if random.random() > self.loss_idler:
                     self.timestamps_idler.append(t)
 
         # jitter
-        sigma = self.jitter_fwhm / (2 * math.sqrt(2 * math.log(2)))
+        sigma = self.jitter / (2 * math.sqrt(2 * math.log(2)))
         if len(self.timestamps_signal) > 0:
             for i in range(len(self.timestamps_signal)):
                 self.timestamps_signal[i] += math.floor(random.gauss(0, sigma))
@@ -202,16 +200,17 @@ class Simulator:
                 for timestamp in self.timestamps_idler:
                     print(timestamp, file=i)
 
-    def cross_corr(self, timestamp_fn=None):
+    def cross_corr(self, timestamp_fn=None, range_ps=200000):
         """
         Cross-correlates the timestamp data sets.
 
         This method performs a cross-correlation between the timestamp data sets, and gives an estimation of the
         coincidence and accidental rate (self.cps and self.aps), as well as the coincidence to accidental ratio
-        (self.car). It checks the time delay in the interval (-self.range_ps/2, self.range_ps/2). If no timestamp file
+        (self.car). It checks the time delay in the interval (-range_ps/2, range_ps/2). If no timestamp file
         names are provided, the self.timestamps_signal and self.timestamps_idler class variables are used instead.
 
         :param (str, str) timestamp_fn: optional file paths of the signal and idler timestamps to be cross-correlated
+        :param int range_ps: range for time delays checked in the cross-correlation (ps)
         """
 
         if timestamp_fn is None:
@@ -232,8 +231,8 @@ class Simulator:
         # count coincidences
         if len(signal) > 0 and len(idler) > 0:
 
-            s_floor = np.int64(np.floor(np.array(signal) / (self.range_ps / 2)))
-            i_floor = np.int64(np.floor(np.array(idler) / (self.range_ps / 2)))
+            s_floor = np.int64(np.floor(np.array(signal) / (range_ps / 2)))
+            i_floor = np.int64(np.floor(np.array(idler) / (range_ps / 2)))
             coinc0 = np.intersect1d(s_floor, i_floor, return_indices=True)
             coinc1 = np.intersect1d(s_floor, i_floor - 1, return_indices=True)
             coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
@@ -246,11 +245,11 @@ class Simulator:
             # iterate over coincidence_interval, find max of the max(histo)'s
             num_steps = 2           # the number of dt's checked for the max
             for dt in np.arange(0, self.coinc_interval, self.coinc_interval / num_steps):
-                bins = np.arange(-self.range_ps / 2 + dt, self.range_ps / 2 + self.coinc_interval, self.coinc_interval)
+                bins = np.arange(-range_ps / 2 + dt, range_ps / 2 + self.coinc_interval, self.coinc_interval)
                 histo = np.histogram(self.dtime, bins)[0]
                 curr_count = max(histo)
-                if curr_count > self.max_counts:
-                    self.max_counts = curr_count
+                if curr_count > self.coincidences:
+                    self.coincidences = curr_count
                     self.bins = bins
                     self.histo = histo
                 else:
@@ -263,10 +262,10 @@ class Simulator:
                 accidentals = np.split(self.histo, [acc_1, acc_2])[1]
 
                 if np.mean(accidentals) > 0:
-                    self.car = self.max_counts / np.mean(accidentals)
+                    self.car = self.coincidences / np.mean(accidentals)
 
-                self.cps = self.max_counts / self.total_time
-                self.aps = (coinc.shape[1] - self.max_counts) / self.total_time
+                self.cps = self.coincidences / self.total_time
+                self.aps = (coinc.shape[1] - self.coincidences) / self.total_time
 
     def plot_cross_corr(self, path=None):
         """
@@ -280,7 +279,7 @@ class Simulator:
         plt.xlabel('Time difference (ps)')
         plt.ylabel('Counts')
         plt.yscale('log')
-        plt.ylim(0.5, 10 ** math.ceil(math.log10(self.max_counts) + 0.5))
+        plt.ylim(0.5, 10 ** math.ceil(math.log10(self.coincidences) + 0.5))
         if path is not None:
             plt.savefig(path, dpi=1000, bbox_inches='tight')
         plt.show()
@@ -293,7 +292,7 @@ if __name__ == "__main__":
     a = Simulator('config.yaml')
     a.generate_timestamps(('timestamps_signal.txt', 'timestamps_idler.txt'))
     a.cross_corr()
-    print('Coincidences: ' + str(a.max_counts))
+    print('Coincidences: ' + str(a.coincidences))
     print('Coincidence-to-Accidental Ratio: ' + str(a.car))
     print('Coincidences per second: ' + str(a.cps))
     print('Accidentals per second: ' + str(a.aps))

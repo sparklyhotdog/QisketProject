@@ -37,8 +37,8 @@ def plot_g2_ambient(yaml_fn, ambient, colors=None, savefig=True):
                 else:
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=ambient[i], color=colors[i])
 
-                if sim.max_counts > max_max:
-                    max_max = sim.max_counts
+                if sim.coincidences > max_max:
+                    max_max = sim.coincidences
 
             bar()
 
@@ -51,12 +51,12 @@ def plot_g2_ambient(yaml_fn, ambient, colors=None, savefig=True):
     if savefig:
         title = 'plots\\g2\\g2_vs_ambientlight\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
@@ -91,8 +91,8 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
                 else:
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=dc[i], color=colors[i])
 
-                if sim.max_counts > max_max:
-                    max_max = sim.max_counts
+                if sim.coincidences > max_max:
+                    max_max = sim.coincidences
 
             bar()
 
@@ -105,12 +105,12 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
     if savefig:
         title = 'plots\\g2\\g2_vs_darkcounts\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
@@ -146,8 +146,8 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None, savefig=True):
                 else:
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=deadtime[i], color=colors[i])
 
-            if sim.max_counts > max_max:
-                max_max = sim.max_counts
+            if sim.coincidences > max_max:
+                max_max = sim.coincidences
 
             bar()
 
@@ -155,17 +155,17 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None, savefig=True):
     plt.ylabel('Counts')
     plt.legend(title='Dead time (ps)')
     plt.yscale('log')
-    plt.ylim(0.5, 10**math.ceil(math.log10(sim.max_counts) + 0.5))
+    plt.ylim(0.5, 10 ** math.ceil(math.log10(sim.coincidences) + 0.5))
 
     if savefig:
         title = 'plots\\g2\\g2_vs_deadtime\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
@@ -192,7 +192,7 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
         for i in range(len(jitter)):
 
             sim = Simulator(yaml_fn)
-            sim.jitter_fwhm = jitter[i]
+            sim.jitter = jitter[i]
             sim.generate_timestamps()
             sim.cross_corr()
 
@@ -204,7 +204,7 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=jitter[i], color=colors[i])
 
                 if fwhm:
-                    half_max = sim.max_counts/2
+                    half_max = sim.coincidences / 2
                     max_i = np.argmax(sim.histo)
                     l_lim_i = max_i
                     r_lim_i = max_i
@@ -243,7 +243,7 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
     if savefig:
         title = 'plots\\g2\\g2_vs_jitter\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
@@ -287,8 +287,8 @@ def plot_g2_loss(yaml_fn, loss, colors=None, savefig=True):
                 else:
                     plt.hist(sim.dtime, sim.bins, alpha=0.5, label=loss[i], color=colors[i])
 
-            if sim.max_counts > max_max:
-                max_max = sim.max_counts
+            if sim.coincidences > max_max:
+                max_max = sim.coincidences
 
             bar()
 
@@ -302,12 +302,12 @@ def plot_g2_loss(yaml_fn, loss, colors=None, savefig=True):
     if savefig:
         title = 'plots\\g2\\g2_vs_loss\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
@@ -345,12 +345,12 @@ def plot_car_ambient(yaml_fn, start, stop, num_points, savefig=True):
     if savefig:
         title = 'plots\\car\\car_vs_ambientlight\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
@@ -388,12 +388,12 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points, savefig=True):
     if savefig:
         title = 'plots\\car\\car_vs_darkcounts\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
@@ -431,12 +431,12 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points, savefig=True):
     if savefig:
         title = 'plots\\car\\car_vs_deadtime\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
@@ -461,7 +461,7 @@ def plot_car_jitter(yaml_fn, start, stop, num_points, savefig=True):
 
         for jitter in x_val:
             sim = Simulator(yaml_fn)
-            sim.jitter_fwhm = jitter
+            sim.jitter = jitter
             sim.generate_timestamps()
             sim.cross_corr()
             y_val.append(sim.car)
@@ -474,7 +474,7 @@ def plot_car_jitter(yaml_fn, start, stop, num_points, savefig=True):
     if savefig:
         title = 'plots\\car\\car_vs_jitter\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
@@ -518,12 +518,12 @@ def plot_car_loss(yaml_fn, start, stop, num_points, savefig=True):
     if savefig:
         title = 'plots\\car\\car_vs_loss\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
@@ -567,12 +567,12 @@ def plot_visibility_ambient(yaml_fn, state, start, stop, num_points, rotations=5
     if savefig:
         title = 'plots\\visibility\\visibility_vs_ambientlight\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                                               'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
@@ -616,12 +616,12 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
     if savefig:
         title = 'plots\\visibility\\visibility_vs_darkcounts\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
@@ -665,12 +665,12 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=
     if savefig:
         title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
@@ -715,7 +715,7 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50
     if savefig:
         title = 'plots\\visibility\\visibility_vs_jitter\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
@@ -765,12 +765,12 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50, 
     if savefig:
         title = 'plots\\visibility\\visibility_vs_loss\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
@@ -823,13 +823,13 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
     if savefig:
         title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
-                '𝜏=' + str(sim.lag) + ',' + \
+                '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
                 'l=' + str((sim.loss_idler + sim.loss_signal) / 2) + ',' + \
                 'dc=' + str(sim.dark_counts) + ',' + \
                 'al=' + str(sim.ambient_light) + ',' + \
                 'dt=' + str(sim.dead_time) + ',' + \
-                'j=' + str(sim.jitter_fwhm) + ',' \
+                'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
 
@@ -840,12 +840,12 @@ if __name__ == '__main__':
 
     # plot_g2_ambient('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
-    # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'], False)
+    plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 50000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
     # plot_g2_loss('config.yaml', [0, 1, 3, 6, 10], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
     # plot_car_ambient('config.yaml', 0, 1000000, 256)
-    plot_car_darkcounts('config.yaml', 0, 1000000, 1024)
+    # plot_car_darkcounts('config.yaml', 0, 1000000, 1024)
     # plot_car_deadtime('config.yaml', 0, 1000000, 64)
     # plot_car_jitter('config.yaml', 0, 10000, 256)
     # plot_car_loss('config.yaml', 0, 30, 256)
