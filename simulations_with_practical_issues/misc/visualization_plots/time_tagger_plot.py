@@ -1,7 +1,6 @@
 import math
 import random
 import numpy as np
-from IPython.display import display, Math, Latex
 import matplotlib.pyplot as plt
 import copy
 import matplotlib.markers
@@ -91,7 +90,6 @@ subplots = [original, al, optical_loss, jitter, dc, dt]
 for subplot in subplots:
     subplot.set_xlim(x_lim_l, x_lim_r)
     subplot.set_ylim(0, 1.5)
-    subplot.set_yticks([])
     subplot.set_yticks([])
     subplot.set_xticks([])
     subplot.set_frame_on(False)

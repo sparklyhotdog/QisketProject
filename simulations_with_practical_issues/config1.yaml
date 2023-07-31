@@ -1,5 +1,6 @@
-loss_signal: 0.1
-loss_idler: 0.1
-dark_count_rate: 10000
-dead_time: 100000
-jitter_fwhm: 100
+loss_signal: 0.1                # probability of not being detected for the signal photons
+loss_idler: 0.1                 # probability of not being detected for the idler photons
+dark_counts: 1000               # (counts/second)
+ambient_light: 100              # (counts/second)
+dead_time: 100000               # (picoseconds)
+jitter: 100                     # (picoseconds)

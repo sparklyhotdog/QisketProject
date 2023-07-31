@@ -34,10 +34,11 @@ def modify_timestamps(in_timestamps, out_timestamps, yaml_fn):
 
     loss_signal = dicty['loss_signal']
     loss_idler = dicty['loss_idler']
-    dark_count_rate = dicty['dark_count_rate']
+    dark_counts = dicty['dark_counts']
+    ambient_light = dicty['ambient_light']
     dead_time = dicty['dead_time']
-    jitter_fwhm = dicty['jitter_fwhm']
-
+    jitter = dicty['jitter']
+    test = []
     # optical loss
     for x in signal:
         if random.random() < loss_signal:
@@ -47,15 +48,24 @@ def modify_timestamps(in_timestamps, out_timestamps, yaml_fn):
             idler.remove(x)
 
     # jitter
-    sigma = jitter_fwhm / (2 * math.sqrt(2 * math.log(2)))
+    sigma = jitter / (2 * math.sqrt(2 * math.log(2)))
     for i in range(len(signal)):
         signal[i] += math.floor(random.gauss(0, sigma))
     for i in range(len(idler)):
         idler[i] += math.floor(random.gauss(0, sigma))
 
+    time = math.floor((signal[-1] + idler[-1])/2)           # in picoseconds
+
+    # generate ambient light
+    for i in range(math.floor(time * ambient_light / 1e12)):
+        # factor in loss
+        if random.random() > loss_signal:
+            signal.append(math.floor(random.random() * time * 1e12))
+        if random.random() > loss_idler:
+            idler.append(math.floor(random.random() * time * 1e12))
+
     # dark counts
-    time = math.floor((signal[-1] + idler[-1])/2)
-    for i in range(math.floor(time * dark_count_rate / 1e12)):
+    for i in range(math.floor(time * dark_counts / 1e12)):
         signal.append(math.floor(random.random() * time))
         idler.append(math.floor(random.random() * time))
     signal.sort()

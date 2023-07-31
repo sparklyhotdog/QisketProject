@@ -3,8 +3,8 @@ total_time: 1                   # (seconds)
 delay: 0                        # delay between idler and signal (picoseconds)
 loss_signal: 0.1                # probability of not being detected for the signal photons
 loss_idler: 0.1                 # probability of not being detected for the idler photons
-dark_counts: 0                  # (counts/second)
-ambient_light: 0                # (counts/second)
-dead_time: 0                    # (picoseconds)
+dark_counts: 1000               # (counts/second)
+ambient_light: 100              # (counts/second)
+dead_time: 100000               # (picoseconds)
 jitter: 100                     # (picoseconds)
 coinc_interval: 1000            # (picoseconds)
