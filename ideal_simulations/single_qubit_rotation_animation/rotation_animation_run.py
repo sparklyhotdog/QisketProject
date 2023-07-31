@@ -7,7 +7,7 @@ import matplotlib.animation as animation
 Runs the animation using preloaded data.
 
 The data is loaded into x_val and y_val from rotation_animation_load.py, because running the simulation on the spot 
-takes too long.
+takes too long. The animation is diplayed in a new window and saved in a gif using pillow.
 '''
 
 # num_shots = how many times to run each circuit
@@ -43,4 +43,9 @@ def animate(frame):
 
 
 anim = animation.FuncAnimation(fig, animate, init_func=init, frames=num_frames, interval=20, blit=True)
+
+writer = animation.PillowWriter(fps=15,
+                                metadata=dict(artist='Me'),
+                                bitrate=1800)
+anim.save('plot.gif', writer=writer)
 plt.show()
