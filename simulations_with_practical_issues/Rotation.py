@@ -103,26 +103,30 @@ class Rotation:
         fig, ax = plt.subplots()
 
         for i in range(4):
-            ax.plot(self.x_val, self.y_val[i], label=states[i])
+            ax.plot(self.x_val, self.y_val[i], label=states[i], linewidth=2.5)
 
-        ax.set_xlabel('Polarizer Angle for the 2nd Photon')
-        ax.set_ylabel('Counts')
-        ax.set_ylim(0 - 40, self.lambd * self.total_time + 40)
+        plt.xlabel('Polarizer Angle for the 2nd Photon', fontsize='xx-large')
+        plt.ylabel('Counts', fontsize='xx-large')
 
         if plot_title is None:
-            ax.set_title('$' + self.state_latex + '$')
+            plt.title('$' + self.state_latex + '$')
         else:
-            ax.set_title(plot_title)
+            plt.title(plot_title)
 
-        ax.set_xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'])
+        plt.xticks([0, math.pi, 2 * math.pi, 3 * math.pi, 4 * math.pi], ['0', 'π', '2π', '3π', '4π'], fontsize='large')
         plt.legend()
+        plt.yticks(fontsize='large')
+        plt.ylim(0)
+
+        # plt.savefig('polarization_correlation.eps', format='eps', bbox_inches='tight')
+
         if path is not None:
             plt.savefig(path, dpi=1000, bbox_inches='tight')
         plt.show()
 
 
 if __name__ == '__main__':
-    d = .25
+    d = .35
     state = (1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2))
     # default title expands the complex number into floats
     # we set the title to keep it in its exponential form
@@ -130,7 +134,8 @@ if __name__ == '__main__':
     a.run()
     print(a.visibility)
     titl = '$\\frac{\sqrt{2}}{2} |00\\rangle+e^{' + str(d) + 'i}|11\\rangle$'
-    a.plot_correlation('plots\\polarization_correlation.png', titl)
+    # a.plot_correlation('plots\\polarization_correlation.png', titl)
+    a.plot_correlation(plot_title='')
 
 #
 #       //-/__

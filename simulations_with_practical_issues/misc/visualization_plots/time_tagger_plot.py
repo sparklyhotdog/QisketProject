@@ -13,7 +13,7 @@ The plot is then displayed and saved in a png file.
 '''
 
 lambd = 100000              # average count rate (100k counts/second)
-n = 10                      # total number of events (1 mil)
+n = 5                      # total number of events (1 mil)
 optical_loss = 0.3          # probability of not being detected for the signal photons
 dark_count_rate = 50000     # (counts/second)
 ambient_light = 50000       # (counts/second)
@@ -78,7 +78,7 @@ x_lim_r = original_timestamps[-1] + 1000000
 
 fig, axs = plt.subplots(6, 1)
 fig.tight_layout(pad=1)
-fig.set_size_inches(6, 6)
+fig.set_size_inches(4.5, 4.5)
 
 original = plt.subplot(6, 1, 1)
 al = plt.subplot(6, 1, 2)
@@ -89,33 +89,33 @@ dt = plt.subplot(6, 1, 6)
 subplots = [original, al, optical_loss, jitter, dc, dt]
 for subplot in subplots:
     subplot.set_xlim(x_lim_l, x_lim_r)
-    subplot.set_ylim(0, 1.5)
+    subplot.set_ylim(0, 1.25)
     subplot.set_yticks([])
     subplot.set_xticks([])
     subplot.set_frame_on(False)
     subplot.set_xlabel('Time', loc='right')
-    subplot.hlines(0, original_timestamps[0], original_timestamps[-1], colors='C3')
+    subplot.hlines(0, original_timestamps[0], original_timestamps[-1], colors='black')
 
 original.set_title('Original Arrival Times of Photons')
-original.stem(original_timestamps, [1]*len(original_timestamps))
+original.stem(original_timestamps, [1]*len(original_timestamps), basefmt='k')
 
 al.set_title('After Adding Ambient Light')
-al.stem(original_timestamps, [1]*len(original_timestamps))
+al.stem(original_timestamps, [1]*len(original_timestamps), basefmt='k')
 # the added points get pluses
 added_points = copy.deepcopy(ambient_timestamps)
 for x in original_timestamps:
     added_points.remove(x)
 if len(added_points) > 0:
-    al.stem(added_points, [1] * len(added_points), markerfmt='P', linefmt='-')
+    al.stem(added_points, [1] * len(added_points), markerfmt='Pr', linefmt='-r', basefmt='k')
 
 optical_loss.set_title('After Optical Loss')
-optical_loss.stem(optical_loss_timestamps, [1]*len(optical_loss_timestamps))
+optical_loss.stem(optical_loss_timestamps, [1]*len(optical_loss_timestamps), basefmt='k')
 # the missing points get crossed out
 missing_points = copy.deepcopy(ambient_timestamps)
 for x in optical_loss_timestamps:
     missing_points.remove(x)
 if len(missing_points) > 0:
-    optical_loss.stem(missing_points, [1]*len(missing_points), markerfmt='x', linefmt='--')
+    optical_loss.stem(missing_points, [1]*len(missing_points), markerfmt='Xr', linefmt='--r', basefmt='k')
 
 jitter.set_title('After Incorporating Jitter')
 for mu in optical_loss_timestamps:
@@ -123,23 +123,24 @@ for mu in optical_loss_timestamps:
     x_val = np.linspace(mu - 3*sigma, mu + 3*sigma)
     y_val = math.e ** ((x_val - mu)**2/(-2 * sigma**2))
     jitter.fill_between(x_val, y_val, [0]*len(x_val), color='#a7cef1')
-jitter.stem(jitter_timestamps, [1]*len(jitter_timestamps))
+jitter.stem(jitter_timestamps, [1]*len(jitter_timestamps), basefmt='k')
 
 dc.set_title('After Adding Dark Counts')
-dc.stem(jitter_timestamps, [1]*len(jitter_timestamps))
+dc.stem(jitter_timestamps, [1]*len(jitter_timestamps), basefmt='k')
 # the added points get pluses
 added_points = copy.deepcopy(darkcounts_timestamps)
 for x in jitter_timestamps:
     added_points.remove(x)
 if len(added_points) > 0:
-    dc.stem(added_points, [1] * len(added_points), markerfmt='P', linefmt='-')
+    dc.stem(added_points, [1] * len(added_points), markerfmt='Pk', linefmt='-k', basefmt='k')
 
 dt.set_title('After Accounting for Dead Time')
 for x in timestamps:
     x_val = [x, x + deadtime, x + deadtime, x]
     y_val = [0, 0, 1, 1]
     dt.fill(x_val, y_val, c='#a7cef1')
-dt.stem(timestamps, [1]*len(timestamps))
+dt.stem(timestamps, [1]*len(timestamps), basefmt='k')
 
-plt.savefig('time_tagger_plot.png', dpi=1000)
+plt.savefig('time_tagger_plot.eps', format='eps', bbox_inches='tight')
+# plt.savefig('time_tagger_plot.png', dpi=1000)
 plt.show()

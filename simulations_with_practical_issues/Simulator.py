@@ -131,13 +131,14 @@ class Simulator:
         self.timestamps_signal = []
         self.timestamps_idler = []
 
-        self.coincidences = 0         # count result from the cross-correlation
+        self.coincidences = 0       # count result from the cross-correlation
         self.car = None             # coincidence-to-accidental ratio
         self.cps = None             # coincidences per second
         self.aps = None             # accidentals per second
         self.histo = None           # binned data for the cross-correlation histogram
         self.dtime = None           # unbinned data for the cross-correlation histogram
         self.bins = None            # bins for the cross-correlation histogram
+        self.range_ps = 200000
 
     def generate_timestamps(self, file_names=None):
         """
@@ -210,13 +211,13 @@ class Simulator:
                 for timestamp in self.timestamps_idler:
                     print(timestamp, file=i)
 
-    def cross_corr(self, timestamp_fn=None, range_ps=200000):
+    def cross_corr(self, timestamp_fn=None, range_ps=None):
         """
         Cross-correlates the timestamp data sets.
 
         This method performs a cross-correlation between the timestamp data sets, and gives an estimation of the
         coincidence and accidental rate (self.cps and self.aps), as well as the coincidence to accidental ratio
-        (self.car). It checks the time delay in the interval (-range_ps/2, range_ps/2). If no timestamp file
+        (self.car). It checks the time delay in the interval (-self.range_ps/2, self.range_ps/2). If no timestamp file
         names are provided, the self.timestamps_signal and self.timestamps_idler class variables are used instead.
 
         :param (str, str) timestamp_fn: optional file paths of the signal and idler timestamps to be cross-correlated
@@ -238,11 +239,14 @@ class Simulator:
                 for line in i:
                     idler.append(int(line))
 
+        if range_ps is not None:
+            self.range_ps = range_ps
+
         # count coincidences
         if len(signal) > 0 and len(idler) > 0:
 
-            s_floor = np.int64(np.floor(np.array(signal) / (range_ps / 2)))
-            i_floor = np.int64(np.floor(np.array(idler) / (range_ps / 2)))
+            s_floor = np.int64(np.floor(np.array(signal) / (self.range_ps / 2)))
+            i_floor = np.int64(np.floor(np.array(idler) / (self.range_ps / 2)))
             coinc0 = np.intersect1d(s_floor, i_floor, return_indices=True)
             coinc1 = np.intersect1d(s_floor, i_floor - 1, return_indices=True)
             coinc2 = np.intersect1d(s_floor, i_floor + 1, return_indices=True)
@@ -255,7 +259,7 @@ class Simulator:
             # iterate over coincidence_interval, find max of the max(histo)'s
             num_steps = 2           # the number of dt's checked for the max
             for dt in np.arange(0, self.coinc_interval, self.coinc_interval / num_steps):
-                bins = np.arange(-range_ps / 2 + dt, range_ps / 2 + self.coinc_interval, self.coinc_interval)
+                bins = np.arange(-self.range_ps / 2 + dt, self.range_ps / 2 + self.coinc_interval, self.coinc_interval)
                 histo = np.histogram(self.dtime, bins)[0]
                 curr_count = max(histo)
                 if curr_count > self.coincidences:
@@ -286,12 +290,20 @@ class Simulator:
         :param str path: optional file path to save the plot in
         """
         plt.hist(self.dtime, self.bins)
-        plt.xlabel('Time difference (ps)')
-        plt.ylabel('Counts')
+        plt.xlim(-self.range_ps/2, self.range_ps/2)
+        ticks_ps = plt.xticks()[0]
+        ticks_ns = np.zeros(ticks_ps.shape, np.int64)
+        for i in range(len(ticks_ps)):
+            ticks_ns[i] = int(ticks_ps[i]/1000)
+        plt.xticks(ticks_ps, ticks_ns, fontsize='large')
+        plt.yticks(fontsize='large')
+        plt.xlabel('Time difference (ns)', fontsize='xx-large')
+        plt.ylabel('Counts', fontsize='xx-large')
         plt.yscale('log')
         plt.ylim(0.5, 10 ** math.ceil(math.log10(self.coincidences) + 0.5))
         if path is not None:
             plt.savefig(path, dpi=1000, bbox_inches='tight')
+        # plt.savefig('cross_corr_practical.eps', format='eps', bbox_inches='tight')
         plt.show()
 
 

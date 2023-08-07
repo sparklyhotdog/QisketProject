@@ -4,6 +4,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from alive_progress import alive_bar
+import yaml
 
 
 states = ['H', 'D', 'V', 'A']
@@ -209,9 +210,9 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
                     l_lim_i = max_i
                     r_lim_i = max_i
 
-                    while sim.histo[l_lim_i] > half_max:
+                    while l_lim_i > 0 and sim.histo[l_lim_i] > half_max:
                         l_lim_i -= 1
-                    while sim.histo[r_lim_i] > half_max:
+                    while r_lim_i < len(sim.histo) and sim.histo[r_lim_i] > half_max:
                         r_lim_i += 1
 
                     l_lim = sim.bins[l_lim_i + 1]
@@ -226,14 +227,22 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
                         # sides with the padding.
                         ax.annotate('', xy=(l_lim - 400, half_max), xycoords='data',
                                     xytext=(r_lim + 400, half_max), textcoords='data',
-                                    arrowprops=dict(arrowstyle="<->", connectionstyle="arc3", color=colors[i], lw=1))
-                        plt.text(r_lim, half_max, str(r_lim - l_lim), color=colors[i])
+                                    arrowprops=dict(arrowstyle="<->", connectionstyle="arc3", color=colors[i], lw=2))
+                        plt.text(r_lim, half_max, str(int(r_lim - l_lim)), color=colors[i], fontsize='large')
             bar()
 
-    plt.xlabel('Time difference (ps)')
-    plt.ylabel('Counts')
-    plt.legend(title='Jitter FWHM')
+    plt.xlabel('Time difference (ns)', fontsize='xx-large')
+    plt.ylabel('Counts', fontsize='xx-large')
+    plt.legend(title='Jitter FWHM', title_fontsize='x-large', fontsize='large', loc=2)
     plt.xlim(-20000, 20000)
+    plt.yscale('log')
+    plt.ylim(10)
+    ticks_ps = plt.xticks()[0]
+    ticks_ns = np.zeros(ticks_ps.shape, np.int64)
+    for i in range(len(ticks_ps)):
+        ticks_ns[i] = int(ticks_ps[i] / 1000)
+    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
+    plt.yticks(fontsize='large')
 
     if fwhm:
         fwhm_str = '_fwhm'
@@ -252,6 +261,8 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
                 'ci=' + str(sim.coinc_interval) + fwhm_str + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
 
+    # plt.savefig('g2_vs_jitter.eps', format='eps', bbox_inches='tight')
+    # plt.savefig('g2_vs_jitter.svg', format='svg', bbox_inches='tight')
     plt.show()
 
 
@@ -486,7 +497,7 @@ def plot_car_jitter(yaml_fn, start, stop, num_points, savefig=True):
     plt.show()
 
 
-def plot_car_loss(yaml_fn, start, stop, num_points, savefig=True):
+def plot_car_loss(yaml_fn, start, stop, num_points, theoretical=False, savefig=True):
     """
     Plots the coincidence to accidental ratio (CAR) versus the optical loss. By default, the plot is saved with the
     parameters in the title. If savefig=False, the plot will be shown but not saved.
@@ -495,9 +506,15 @@ def plot_car_loss(yaml_fn, start, stop, num_points, savefig=True):
     :param float start: starting loss (dB)
     :param float stop: stopping loss (dB)
     :param int num_points: number of points to plot
+    :param bool theoretical: if the theoretical line is graphed
     :param bool savefig: if the plot should be saved in a file
     """
-    x_val = 1 - 10**(-np.linspace(start, stop, num_points)/10)
+
+    y_fn = open(yaml_fn, 'r')
+    dicty = yaml.load(y_fn, Loader=yaml.SafeLoader)
+    y_fn.close()
+
+    x_val = 1 - 10**(-np.linspace(start, stop/2, num_points)/10)
     y_val = []
 
     with alive_bar(num_points, force_tty=True) as bar:
@@ -510,10 +527,20 @@ def plot_car_loss(yaml_fn, start, stop, num_points, savefig=True):
             sim.cross_corr()
             y_val.append(sim.car)
             bar()
+    x = np.linspace(start, stop, num_points)
+    plt.plot(x, y_val, label='Simulated')
 
-    plt.plot(np.linspace(start, stop, num_points), y_val)
-    plt.xlabel('Optical Loss (dB)')
-    plt.ylabel('Coincidence-to-Accidental Rate')
+    if theoretical:
+        dc = dicty['dark_counts']
+        lambd = dicty['lambd']
+        theoretical_y = lambd*10**(-x/10)/((lambd*10**(-x/10)+dc)*(lambd+dc)*1e-9)
+        plt.plot(x, theoretical_y, color='#d62728', label='Theoretical', linewidth=2.5)
+        plt.legend(fontsize='large')
+
+    plt.xlabel('Optical Loss (dB)', fontsize='xx-large')
+    plt.ylabel('CAR', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\car\\car_vs_loss\\' + \
@@ -526,7 +553,7 @@ def plot_car_loss(yaml_fn, start, stop, num_points, savefig=True):
                 'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000, bbox_inches='tight')
-
+    # plt.savefig('car_vs_loss.eps', format='eps', bbox_inches='tight')
     plt.show()
 
 
@@ -804,13 +831,13 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
             bar()
 
     for i in range(4):
-        plt.plot(x_val, y_val[i], label=states[i])
-    plt.legend()
-    plt.xlabel('Phase Difference in the Entangled State')
-    plt.ylabel('Visibility')
+        plt.plot(x_val, y_val[i], label=states[i], linewidth=2)
+    plt.legend(fontsize='large')
+    plt.xlabel('Phase Difference', fontsize='xx-large')
+    plt.ylabel('Visibility', fontsize='xx-large')
     plt.ylim(-0.01, 1.01)
 
-    num_ticks = math.floor((stop + 0.001)/math.pi)
+    num_ticks = math.floor((stop + 0.1)/math.pi)
     ticks = [0]
     labels = ['0']
 
@@ -818,7 +845,8 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
         ticks.append(i * math.pi)
         labels.append(str(i) + 'π')
 
-    plt.xticks(ticks, labels)
+    plt.xticks(ticks, labels, fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
@@ -832,7 +860,7 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
                 'j=' + str(sim.jitter) + ',' \
                 'ci=' + str(sim.coinc_interval) + '.png'
         plt.savefig(title, dpi=1000)
-
+    # plt.savefig('visibility_vs_phasediff.eps', format='eps', bbox_inches='tight')
     plt.show()
 
 
@@ -840,15 +868,15 @@ if __name__ == '__main__':
 
     # plot_g2_ambient('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
     # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
-    plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
-    # plot_g2_jitter('config.yaml', [0, 5000, 10000, 20000, 50000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
+    # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
+    # plot_g2_jitter('config.yaml', [0, 2000, 10000, 100000, 1000000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
     # plot_g2_loss('config.yaml', [0, 1, 3, 6, 10], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
     # plot_car_ambient('config.yaml', 0, 1000000, 256)
     # plot_car_darkcounts('config.yaml', 0, 1000000, 1024)
     # plot_car_deadtime('config.yaml', 0, 1000000, 64)
     # plot_car_jitter('config.yaml', 0, 10000, 256)
-    # plot_car_loss('config.yaml', 0, 30, 256)
+    plot_car_loss('config.yaml', 0, 60, 1024, theoretical=True, savefig=False)
 
     d = .25
     qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
