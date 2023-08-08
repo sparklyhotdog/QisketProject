@@ -141,6 +141,6 @@ for x in timestamps:
     dt.fill(x_val, y_val, c='#a7cef1')
 dt.stem(timestamps, [1]*len(timestamps), basefmt='k')
 
-plt.savefig('time_tagger_plot.eps', format='eps', bbox_inches='tight')
-# plt.savefig('time_tagger_plot.png', dpi=1000)
+# plt.savefig('time_tagger_plot.eps', format='eps', bbox_inches='tight')
+plt.savefig('time_tagger_plot.png', bbox_inches='tight', dpi=1000)
 plt.show()

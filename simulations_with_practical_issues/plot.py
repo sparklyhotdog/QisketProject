@@ -43,9 +43,11 @@ def plot_g2_ambient(yaml_fn, ambient, colors=None, savefig=True):
 
             bar()
 
-    plt.xlabel('Time difference (ps)')
-    plt.ylabel('Counts')
-    plt.legend(title='Ambient light counts per second')
+    plt.legend(title='Ambient light counts per second', title_fontsize='x-large', fontsize='large', loc=2)
+    plt.xlabel('Time difference (ns)', fontsize='xx-large')
+    plt.ylabel('Counts', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
 
@@ -97,9 +99,11 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
 
             bar()
 
-    plt.xlabel('Time difference (ps)')
-    plt.ylabel('Counts')
-    plt.legend(title='Dark counts per second')
+    plt.legend(title='Dark counts per second', title_fontsize='x-large', fontsize='large', loc=2)
+    plt.xlabel('Time difference (ns)', fontsize='xx-large')
+    plt.ylabel('Counts', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
 
@@ -152,9 +156,11 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None, savefig=True):
 
             bar()
 
-    plt.xlabel('Time difference (ps)')
-    plt.ylabel('Counts')
-    plt.legend(title='Dead time (ps)')
+    plt.legend(title='Dead time (ps)', title_fontsize='x-large', fontsize='large', loc=2)
+    plt.xlabel('Time difference (ns)', fontsize='xx-large')
+    plt.ylabel('Counts', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
     plt.yscale('log')
     plt.ylim(0.5, 10 ** math.ceil(math.log10(sim.coincidences) + 0.5))
 
@@ -231,9 +237,11 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
                         plt.text(r_lim, half_max, str(int(r_lim - l_lim)), color=colors[i], fontsize='large')
             bar()
 
+    plt.legend(title='Jitter FWHM', title_fontsize='x-large', fontsize='large', loc=2)
     plt.xlabel('Time difference (ns)', fontsize='xx-large')
     plt.ylabel('Counts', fontsize='xx-large')
-    plt.legend(title='Jitter FWHM', title_fontsize='x-large', fontsize='large', loc=2)
+    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
+    plt.yticks(fontsize='large')
     plt.xlim(-20000, 20000)
     plt.yscale('log')
     plt.ylim(10)
@@ -241,8 +249,6 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
     ticks_ns = np.zeros(ticks_ps.shape, np.int64)
     for i in range(len(ticks_ps)):
         ticks_ns[i] = int(ticks_ps[i] / 1000)
-    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
-    plt.yticks(fontsize='large')
 
     if fwhm:
         fwhm_str = '_fwhm'
@@ -303,10 +309,12 @@ def plot_g2_loss(yaml_fn, loss, colors=None, savefig=True):
 
             bar()
 
-    plt.xlabel('Time difference (ps)')
-    plt.ylabel('Counts')
     plt.xlim(-10000, 10000)
-    plt.legend(title='Optical Loss (dB)')
+    plt.legend(title='Optical Loss (dB)', title_fontsize='x-large', fontsize='large', loc=2)
+    plt.xlabel('Time difference (ns)', fontsize='xx-large')
+    plt.ylabel('Counts', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
 
@@ -349,9 +357,11 @@ def plot_car_ambient(yaml_fn, start, stop, num_points, savefig=True):
             y_val.append(sim.car)
             bar()
 
-    plt.plot(x_val, y_val)
-    plt.xlabel('Ambient Light Count Rate (counts/second)')
-    plt.ylabel('Coincidence-to-Accidental Rate')
+    plt.plot(x_val, y_val, linewidth=2)
+    plt.xlabel('Ambient Light Count Rate (counts/second)', fontsize='xx-large')
+    plt.ylabel('CAR', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\car\\car_vs_ambientlight\\' + \
@@ -392,9 +402,11 @@ def plot_car_darkcounts(yaml_fn, start, stop, num_points, savefig=True):
             y_val.append(sim.car)
             bar()
 
-    plt.plot(x_val, y_val)
-    plt.xlabel('Dark Count Rate (counts/second)')
-    plt.ylabel('Coincidence-to-Accidental Rate')
+    plt.plot(x_val, y_val, linewidth=2)
+    plt.xlabel('Dark Count Rate (counts/second)', fontsize='xx-large')
+    plt.ylabel('CAR', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\car\\car_vs_darkcounts\\' + \
@@ -435,9 +447,11 @@ def plot_car_deadtime(yaml_fn, start, stop, num_points, savefig=True):
             y_val.append(sim.car)
             bar()
 
-    plt.plot(x_val, y_val)
-    plt.xlabel('Dead Time (ps)')
-    plt.ylabel('Coincidence-to-Accidental Rate')
+    plt.plot(x_val, y_val, linewidth=2)
+    plt.xlabel('Dead Time (ps)', fontsize='xx-large')
+    plt.ylabel('CAR', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\car\\car_vs_deadtime\\' + \
@@ -478,9 +492,11 @@ def plot_car_jitter(yaml_fn, start, stop, num_points, savefig=True):
             y_val.append(sim.car)
             bar()
 
-    plt.plot(x_val, y_val)
-    plt.xlabel('Jitter FWHM (ps)')
-    plt.ylabel('Coincidence-to-Accidental Rate')
+    plt.plot(x_val, y_val, linewidth=2)
+    plt.xlabel('Jitter FWHM (ps)', fontsize='xx-large')
+    plt.ylabel('CAR', fontsize='xx-large')
+    plt.xticks(fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\car\\car_vs_jitter\\' + \
@@ -585,10 +601,11 @@ def plot_visibility_ambient(yaml_fn, state, start, stop, num_points, rotations=5
             bar()
 
     for i in range(4):
-        plt.plot(x_val, y_val[i], label=states[i])
-    plt.legend()
-    plt.xlabel('Ambient Light Count Rate (counts/second)')
-    plt.ylabel('Visibility')
+        plt.plot(x_val, y_val[i], label=states[i], linewidth=2)
+
+    plt.xlabel('Ambient Light Count Rate (counts/second)', fontsize='xx-large')
+    plt.ylabel('Visibility', fontsize='xx-large')
+    plt.legend(fontsize='large')
     plt.ylim(-0.01, 1.01)
 
     if savefig:
@@ -634,10 +651,11 @@ def plot_visibility_darkcounts(yaml_fn, state, start, stop, num_points, rotation
             bar()
 
     for i in range(4):
-        plt.plot(x_val, y_val[i], label=states[i])
-    plt.legend()
-    plt.xlabel('Dark Count Rate (counts/second)')
-    plt.ylabel('Visibility')
+        plt.plot(x_val, y_val[i], label=states[i], linewidth=2)
+
+    plt.xlabel('Dark Count Rate (counts/second)', fontsize='xx-large')
+    plt.ylabel('Visibility', fontsize='xx-large')
+    plt.legend(fontsize='large')
     plt.ylim(-0.01, 1.01)
 
     if savefig:
@@ -683,10 +701,11 @@ def plot_visibility_deadtime(yaml_fn, state, start, stop, num_points, rotations=
             bar()
 
     for i in range(4):
-        plt.plot(x_val, y_val[i], label=states[i])
-    plt.legend()
-    plt.xlabel('Dead Time (ps)')
-    plt.ylabel('Visibility')
+        plt.plot(x_val, y_val[i], label=states[i], linewidth=2)
+
+    plt.xlabel('Dead Time (ps)', fontsize='xx-large')
+    plt.ylabel('Visibility', fontsize='xx-large')
+    plt.legend(fontsize='large')
     plt.ylim(-0.01, 1.01)
 
     if savefig:
@@ -733,10 +752,11 @@ def plot_visibility_jitter(yaml_fn, state, start, stop, num_points, rotations=50
             bar()
 
     for i in range(4):
-        plt.plot(x_val, y_val[i], label=states[i])
-    plt.legend()
-    plt.xlabel('Jitter FWHM (ps)')
-    plt.ylabel('Visibility')
+        plt.plot(x_val, y_val[i], label=states[i], linewidth=2)
+
+    plt.xlabel('Jitter FWHM (ps)', fontsize='xx-large')
+    plt.ylabel('Visibility', fontsize='xx-large')
+    plt.legend(fontsize='large')
     plt.ylim(-0.01, 1.01)
 
     if savefig:
@@ -783,10 +803,11 @@ def plot_visibility_loss(yaml_fn, state, start, stop, num_points, rotations=50, 
             bar()
 
     for i in range(4):
-        plt.plot(np.linspace(start, stop, num_points), y_val[i], label=states[i])
-    plt.legend()
-    plt.xlabel('Optical Loss (dB)')
-    plt.ylabel('Visibility')
+        plt.plot(np.linspace(start, stop, num_points), y_val[i], label=states[i], linewidth=2)
+
+    plt.xlabel('Optical Loss (dB)', fontsize='xx-large')
+    plt.ylabel('Visibility', fontsize='xx-large')
+    plt.legend(fontsize='large')
     plt.ylim(-0.01, 1.01)
 
     if savefig:
@@ -832,9 +853,10 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
 
     for i in range(4):
         plt.plot(x_val, y_val[i], label=states[i], linewidth=2)
-    plt.legend(fontsize='large')
+
     plt.xlabel('Phase Difference', fontsize='xx-large')
     plt.ylabel('Visibility', fontsize='xx-large')
+    plt.legend(fontsize='large')
     plt.ylim(-0.01, 1.01)
 
     num_ticks = math.floor((stop + 0.1)/math.pi)
@@ -849,7 +871,7 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
     plt.yticks(fontsize='large')
 
     if savefig:
-        title = 'plots\\visibility\\visibility_vs_deadtime\\' + \
+        title = 'plots\\visibility\\visibility_vs_phasediff\\' + \
                 'λ=' + str(sim.lambd) + ',' + \
                 '𝜏=' + str(sim.delay) + ',' + \
                 str(sim.total_time) + 's,' + \
@@ -876,7 +898,7 @@ if __name__ == '__main__':
     # plot_car_darkcounts('config.yaml', 0, 1000000, 1024)
     # plot_car_deadtime('config.yaml', 0, 1000000, 64)
     # plot_car_jitter('config.yaml', 0, 10000, 256)
-    plot_car_loss('config.yaml', 0, 60, 1024, theoretical=True, savefig=False)
+    plot_car_loss('config.yaml', 0, 60, 256, theoretical=True, savefig=False)
 
     d = .25
     qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]
@@ -885,7 +907,7 @@ if __name__ == '__main__':
     # plot_visibility_deadtime('config.yaml', qubit_state, 0, 1000000, 8)
     # plot_visibility_jitter('config.yaml', qubit_state, 0, 100000, 8)
     # plot_visibility_loss('config.yaml', qubit_state, 0, 30, 8)
-    # plot_visibility_phasediff('config.yaml', 0, 4*math.pi, 64)
+    # plot_visibility_phasediff('config.yaml', 0, 4*math.pi, 64, savefig=False)
 
 #
 #               _=-
