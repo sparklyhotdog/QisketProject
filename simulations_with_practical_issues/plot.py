@@ -46,10 +46,16 @@ def plot_g2_ambient(yaml_fn, ambient, colors=None, savefig=True):
     plt.legend(title='Ambient light counts per second', title_fontsize='x-large', fontsize='large', loc=2)
     plt.xlabel('Time difference (ns)', fontsize='xx-large')
     plt.ylabel('Counts', fontsize='xx-large')
-    plt.xticks(fontsize='large')
-    plt.yticks(fontsize='large')
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
+    plt.xlim(-sim.range_ps / 2, sim.range_ps / 2)
+
+    ticks_ps = plt.xticks()[0]
+    ticks_ns = np.zeros(ticks_ps.shape, np.int64)
+    for i in range(len(ticks_ps)):
+        ticks_ns[i] = int(ticks_ps[i] / 1000)
+    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\g2\\g2_vs_ambientlight\\' + \
@@ -99,13 +105,19 @@ def plot_g2_darkcounts(yaml_fn, dc, colors=None, savefig=True):
 
             bar()
 
-    plt.legend(title='Dark counts per second', title_fontsize='x-large', fontsize='large', loc=2)
+    plt.legend(title='Dark counts/s', title_fontsize='x-large', fontsize='large', loc=2)
     plt.xlabel('Time difference (ns)', fontsize='xx-large')
     plt.ylabel('Counts', fontsize='xx-large')
-    plt.xticks(fontsize='large')
-    plt.yticks(fontsize='large')
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
+    plt.xlim(-sim.range_ps/2, sim.range_ps/2)
+
+    ticks_ps = plt.xticks()[0]
+    ticks_ns = np.zeros(ticks_ps.shape, np.int64)
+    for i in range(len(ticks_ps)):
+        ticks_ns[i] = int(ticks_ps[i] / 1000)
+    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\g2\\g2_vs_darkcounts\\' + \
@@ -159,10 +171,16 @@ def plot_g2_deadtime(yaml_fn, deadtime, colors=None, savefig=True):
     plt.legend(title='Dead time (ps)', title_fontsize='x-large', fontsize='large', loc=2)
     plt.xlabel('Time difference (ns)', fontsize='xx-large')
     plt.ylabel('Counts', fontsize='xx-large')
-    plt.xticks(fontsize='large')
-    plt.yticks(fontsize='large')
     plt.yscale('log')
     plt.ylim(0.5, 10 ** math.ceil(math.log10(sim.coincidences) + 0.5))
+    plt.xlim(-sim.range_ps / 2, sim.range_ps / 2)
+
+    ticks_ps = plt.xticks()[0]
+    ticks_ns = np.zeros(ticks_ps.shape, np.int64)
+    for i in range(len(ticks_ps)):
+        ticks_ns[i] = int(ticks_ps[i] / 1000)
+    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\g2\\g2_vs_deadtime\\' + \
@@ -237,18 +255,18 @@ def plot_g2_jitter(yaml_fn, jitter, colors=None, fwhm=False, savefig=True):
                         plt.text(r_lim, half_max, str(int(r_lim - l_lim)), color=colors[i], fontsize='large')
             bar()
 
-    plt.legend(title='Jitter FWHM', title_fontsize='x-large', fontsize='large', loc=2)
     plt.xlabel('Time difference (ns)', fontsize='xx-large')
     plt.ylabel('Counts', fontsize='xx-large')
-    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
-    plt.yticks(fontsize='large')
-    plt.xlim(-20000, 20000)
+    plt.legend(title='Jitter FWHM', title_fontsize='x-large', fontsize='large', loc=2)
+    plt.xlim(-sim.range_ps / 2, sim.range_ps / 2)
     plt.yscale('log')
     plt.ylim(10)
     ticks_ps = plt.xticks()[0]
     ticks_ns = np.zeros(ticks_ps.shape, np.int64)
     for i in range(len(ticks_ps)):
         ticks_ns[i] = int(ticks_ps[i] / 1000)
+    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
+    plt.yticks(fontsize='large')
 
     if fwhm:
         fwhm_str = '_fwhm'
@@ -313,10 +331,16 @@ def plot_g2_loss(yaml_fn, loss, colors=None, savefig=True):
     plt.legend(title='Optical Loss (dB)', title_fontsize='x-large', fontsize='large', loc=2)
     plt.xlabel('Time difference (ns)', fontsize='xx-large')
     plt.ylabel('Counts', fontsize='xx-large')
-    plt.xticks(fontsize='large')
-    plt.yticks(fontsize='large')
     plt.yscale('log')
     plt.ylim(0.5, 10**math.ceil(math.log10(max_max) + 0.5))
+    plt.xlim(-sim.range_ps / 2, sim.range_ps / 2)
+
+    ticks_ps = plt.xticks()[0]
+    ticks_ns = np.zeros(ticks_ps.shape, np.int64)
+    for i in range(len(ticks_ps)):
+        ticks_ns[i] = int(ticks_ps[i] / 1000)
+    plt.xticks(ticks_ps, ticks_ns, fontsize='large')
+    plt.yticks(fontsize='large')
 
     if savefig:
         title = 'plots\\g2\\g2_vs_loss\\' + \
@@ -889,8 +913,8 @@ def plot_visibility_phasediff(yaml_fn, start, stop, num_points, rotations=50, sa
 if __name__ == '__main__':
 
     # plot_g2_ambient('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
-    # plot_g2_darkcounts('config.yaml', [0, 100, 1000, 100000], ['C1', 'C8', 'C2', 'C0'])
-    # plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'])
+    # plot_g2_darkcounts('config.yaml', [0, 1000, 5000, 10000], ['C1', 'C8', 'C2', 'C0'])
+    plot_g2_deadtime('config.yaml', [0, 25000, 50000, 75000], ['C1', 'C8', 'C2', 'C0'], savefig=False)
     # plot_g2_jitter('config.yaml', [0, 2000, 10000, 100000, 1000000], ['C3', 'C1', 'C2', 'C0', 'C4'], fwhm=True)
     # plot_g2_loss('config.yaml', [0, 1, 3, 6, 10], ['C3', 'C1', 'C8', 'C2', 'C0', 'C4'])
 
@@ -898,7 +922,7 @@ if __name__ == '__main__':
     # plot_car_darkcounts('config.yaml', 0, 1000000, 1024)
     # plot_car_deadtime('config.yaml', 0, 1000000, 64)
     # plot_car_jitter('config.yaml', 0, 10000, 256)
-    plot_car_loss('config.yaml', 0, 60, 256, theoretical=True, savefig=False)
+    # plot_car_loss('config.yaml', 0, 60, 1024, theoretical=True, savefig=True)
 
     d = .25
     qubit_state = [1 / math.sqrt(2), 0, 0, np.exp(1j * d) / math.sqrt(2)]

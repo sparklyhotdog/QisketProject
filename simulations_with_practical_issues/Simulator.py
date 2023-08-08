@@ -38,7 +38,6 @@ def modify_timestamps(in_timestamps, out_timestamps, yaml_fn):
     ambient_light = dicty['ambient_light']
     dead_time = dicty['dead_time']
     jitter = dicty['jitter']
-    test = []
     # optical loss
     for x in signal:
         if random.random() < loss_signal:
